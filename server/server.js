@@ -6,6 +6,11 @@ const errorHandler = require('./middleware/errorHandler');
 
 // Import routes
 const authRoutes = require('./routes/authRoutes');
+// ========================================
+// MEMBER-4 (Shakib Shadman Shoumik - 22101057)
+// Module 2 Feature 4: Maid Search Routes
+// ========================================
+const maidRoutes = require('./routes/maidRoutes');
 // TODO: Import other routes as team members complete them
 // const profileRoutes = require('./routes/profileRoutes');
 // const bookingRoutes = require('./routes/bookingRoutes');
@@ -49,6 +54,10 @@ app.get('/api/health', (req, res) => {
 
 // API Routes
 app.use('/api/auth', authRoutes);
+// ========================================
+// MEMBER-4 (Shakib Shadman Shoumik - 22101057)
+// ========================================
+app.use('/api/maids', maidRoutes);
 // TODO: Add other routes as team members complete them
 // app.use('/api/profile', profileRoutes);
 // app.use('/api/bookings', bookingRoutes);
