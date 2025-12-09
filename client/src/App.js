@@ -2,11 +2,12 @@ import React from 'react';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import Register from './components/auth/Register';
 import EmailVerification from './components/auth/EmailVerification';
+import UpdateProfile from './components/profile/UpdateProfile';
+import ChangePassword from './components/profile/ChangePassword';
+
 // TODO: Import other components as they are completed
 // import Login from './components/auth/Login';
 // import MaidProfile from './components/profile/MaidProfile';
-// import ChangePassword from './components/profile/ChangePassword';
-// import ProfileUpdate from './components/profile/ProfileUpdate';
 
 function App() {
   return (
@@ -47,11 +48,12 @@ function App() {
           {/* Module 1 Routes */}
           <Route path="/register" element={<Register />} />
           <Route path="/verify-email/:userId/:token" element={<EmailVerification />} />
+          <Route path="/profile/update" element={<UpdateProfile />} />
+          <Route path="/profile/change-password" element={<ChangePassword />} />
+
           {/* TODO: Add these routes as team members complete them */}
           {/* <Route path="/login" element={<Login />} /> */}
           {/* <Route path="/profile/maid" element={<MaidProfile />} /> */}
-          {/* <Route path="/profile/update" element={<ProfileUpdate />} /> */}
-          {/* <Route path="/profile/change-password" element={<ChangePassword />} /> */}
 
           {/* 404 Not Found */}
           <Route
