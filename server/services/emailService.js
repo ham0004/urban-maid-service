@@ -10,8 +10,8 @@ sgMail.setApiKey(config.SENDGRID_API_KEY);
  * @param {string} name - User's name
  * @param {string} verificationToken - Unique verification token
  */
-const sendVerificationEmail = async (email, name, verificationToken) => {
-  const verificationUrl = `${config.CLIENT_URL}/verify-email/${verificationToken}`;
+const sendVerificationEmail = async (email, name, verificationToken, userId) => {
+  const verificationUrl = `${config.CLIENT_URL}/verify-email/${userId}/${verificationToken}`;
 
   const msg = {
     to: email,

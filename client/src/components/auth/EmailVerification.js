@@ -1,36 +1,72 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import api from '../../utils/api';
 
 const EmailVerification = () => {
-  const { token } = useParams();
+  const { userId, token } = useParams();
   const navigate = useNavigate();
-  const [status, setStatus] = useState('verifying'); // verifying, success, error
+
+  const [status, setStatus] = useState('verifying');
   const [message, setMessage] = useState('');
 
+  // ✅ Wrapped with useCallback to prevent re-creation
+  const verifyEmail = useCallback(async () => {
+    if (!token) {
+      setStatus('error');
+      setMessage('No verification token provided');
+      return;
+    }
+
+    try {
+      console.log('🔍 Sending verification request for token:', token);
+      console.log('👤 User ID:', userId);
+
+      const response = await api.get(`/auth/verify/${userId}/${token}`);
+
+      console.log('✅ Response received:', response.data);
+
+      if (response.data.success === true) {
+        setStatus('success');
+        setMessage(response.data.message);
+
+        setTimeout(() => {
+          navigate('/login');
+        }, 3000);
+      } else {
+        setStatus('error');
+        setMessage(response.data.message || 'Verification failed');
+      }
+    } catch (err) {
+      console.error('❌ Error caught:', err);
+      console.error('❌ Error response:', err.response?.data);
+
+      if (err.response?.data?.message?.includes('already verified')) {
+        setStatus('success');
+        setMessage('Your email is already verified! You can login now.');
+
+        setTimeout(() => {
+          navigate('/login');
+        }, 3000);
+      } else {
+        setStatus('error');
+        setMessage(
+          err.response?.data?.message ||
+          err.message ||
+          'Verification failed'
+        );
+      }
+    }
+  }, [token, userId, navigate]);
+
+  // ✅ Correct dependency added
   useEffect(() => {
     verifyEmail();
-  }, [token]);
-
-  const verifyEmail = async () => {
-    try {
-      const response = await api.get(`/auth/verify/${token}`);
-      setStatus('success');
-      setMessage(response.data.message);
-
-      // Redirect to login after 3 seconds
-      setTimeout(() => {
-        navigate('/login');
-      }, 3000);
-    } catch (err) {
-      setStatus('error');
-      setMessage(err.message || 'Verification failed. Please try again.');
-    }
-  };
+  }, [verifyEmail]);
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-indigo-500 to-purple-600 py-12 px-4 sm:px-6 lg:px-8">
       <div className="max-w-md w-full space-y-8 bg-white p-10 rounded-xl shadow-2xl">
+
         {/* Verifying State */}
         {status === 'verifying' && (
           <div className="text-center">
@@ -121,8 +157,8 @@ const EmailVerification = () => {
               <p className="text-sm font-medium">Possible reasons:</p>
               <ul className="text-xs mt-2 space-y-1 text-left list-disc list-inside">
                 <li>Verification link has expired (valid for 24 hours)</li>
-                <li>Email already verified</li>
-                <li>Invalid or tampered verification token</li>
+                <li>Invalid verification token</li>
+                <li>Link was already used</li>
               </ul>
             </div>
             <div className="space-y-2">
@@ -141,6 +177,7 @@ const EmailVerification = () => {
             </div>
           </div>
         )}
+
       </div>
     </div>
   );

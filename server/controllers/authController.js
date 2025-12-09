@@ -46,7 +46,7 @@ exports.registerUser = async (req, res, next) => {
 
     // Send verification email
     try {
-      await sendVerificationEmail(user.email, user.name, verificationToken);
+      await sendVerificationEmail(user.email, user.name, verificationToken, user._id);
     } catch (emailError) {
       console.error('Email sending failed:', emailError);
       // Delete user if email fails
@@ -75,40 +75,68 @@ exports.registerUser = async (req, res, next) => {
  */
 exports.verifyEmail = async (req, res, next) => {
   try {
-    const { token } = req.params;
+    const { userId, token } = req.params;
 
-    // Find user with this verification token
-    const user = await User.findOne({
-      verificationToken: token,
-      verificationTokenExpire: { $gt: Date.now() }, // Token not expired
-    });
+    console.log('🔍 Verifying token for user:', userId);
 
-    if (!user) {
+    if (!token || !userId) {
       return res.status(400).json({
         success: false,
-        message: 'Invalid or expired verification token',
+        message: 'Invalid verification link',
       });
     }
 
-    // Check if already verified
-    if (user.isVerified) {
-      return res.status(400).json({
+    // Find user by ID first
+    const user = await User.findById(userId).select('+verificationToken +verificationTokenExpire');
+
+    if (!user) {
+      return res.status(404).json({
         success: false,
+        message: 'User not found',
+      });
+    }
+
+    // Check if ALREADY verified
+    if (user.isVerified) {
+      console.log('✅ Already verified:', user.email);
+      return res.status(200).json({
+        success: true,
         message: 'Email already verified. You can login now.',
       });
     }
 
-    // Update user
+    // Verify token
+    if (user.verificationToken !== token) {
+      console.log('❌ Invalid token for user:', user.email);
+      return res.status(400).json({
+        success: false,
+        message: 'Invalid verification token.',
+      });
+    }
+
+    // Check expiry
+    if (user.verificationTokenExpire < Date.now()) {
+      console.log('⏰ Token expired');
+      return res.status(400).json({
+        success: false,
+        message: 'Verification link has expired. Please register again.',
+      });
+    }
+
+    // Verify the user
     user.isVerified = true;
     user.verificationToken = undefined;
     user.verificationTokenExpire = undefined;
     await user.save();
+
+    console.log('✅ Email verified successfully:', user.email);
 
     res.status(200).json({
       success: true,
       message: 'Email verified successfully! You can now login.',
     });
   } catch (error) {
+    console.error('❌ Verification error:', error);
     next(error);
   }
 };
@@ -126,3 +154,5 @@ exports.loginUser = async (req, res, next) => {
     message: 'Login feature not yet implemented. Member-3 will complete this.',
   });
 };
+
+

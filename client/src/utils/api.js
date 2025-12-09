@@ -1,6 +1,5 @@
 import axios from 'axios';
 
-// Create axios instance with base URL
 const api = axios.create({
   baseURL: process.env.REACT_APP_API_URL || 'http://localhost:5000/api',
   headers: {
@@ -8,7 +7,7 @@ const api = axios.create({
   },
 });
 
-// Request interceptor - Add token to requests
+// Request interceptor
 api.interceptors.request.use(
   (config) => {
     const token = localStorage.getItem('token');
@@ -22,12 +21,11 @@ api.interceptors.request.use(
   }
 );
 
-// Response interceptor - Handle errors globally
+// Response interceptor
 api.interceptors.response.use(
   (response) => response,
   (error) => {
     if (error.response) {
-      // Server responded with error
       const message = error.response.data?.message || 'Something went wrong';
       
       // Handle 401 Unauthorized
@@ -39,10 +37,8 @@ api.interceptors.response.use(
       
       return Promise.reject(new Error(message));
     } else if (error.request) {
-      // Request made but no response
       return Promise.reject(new Error('Network error. Please check your connection.'));
     } else {
-      // Something else happened
       return Promise.reject(error);
     }
   }

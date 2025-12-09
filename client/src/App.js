@@ -14,8 +14,8 @@ function App() {
       <div className="min-h-screen bg-gray-50">
         <Routes>
           {/* Home Route */}
-          <Route 
-            path="/" 
+          <Route
+            path="/"
             element={
               <div className="flex items-center justify-center min-h-screen">
                 <div className="text-center">
@@ -41,12 +41,12 @@ function App() {
                   </div>
                 </div>
               </div>
-            } 
+            }
           />
 
           {/* Module 1 Routes */}
           <Route path="/register" element={<Register />} />
-          <Route path="/verify-email/:token" element={<EmailVerification />} />
+          <Route path="/verify-email/:userId/:token" element={<EmailVerification />} />
           {/* TODO: Add these routes as team members complete them */}
           {/* <Route path="/login" element={<Login />} /> */}
           {/* <Route path="/profile/maid" element={<MaidProfile />} /> */}
@@ -54,8 +54,8 @@ function App() {
           {/* <Route path="/profile/change-password" element={<ChangePassword />} /> */}
 
           {/* 404 Not Found */}
-          <Route 
-            path="*" 
+          <Route
+            path="*"
             element={
               <div className="flex items-center justify-center min-h-screen">
                 <div className="text-center">
@@ -69,7 +69,7 @@ function App() {
                   </a>
                 </div>
               </div>
-            } 
+            }
           />
         </Routes>
       </div>
