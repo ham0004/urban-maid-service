@@ -5,7 +5,9 @@ const config = require('./config/config');
 const errorHandler = require('./middleware/errorHandler');
 
 // Import routes
+// Import routes
 const authRoutes = require('./routes/authRoutes');
+const maidRoutes = require('./routes/maidRoutes');
 // TODO: Import other routes as team members complete them
 // const profileRoutes = require('./routes/profileRoutes');
 // const bookingRoutes = require('./routes/bookingRoutes');
@@ -49,6 +51,7 @@ app.get('/api/health', (req, res) => {
 
 // API Routes
 app.use('/api/auth', authRoutes);
+app.use('/api/maids', maidRoutes);
 // TODO: Add other routes as team members complete them
 // app.use('/api/profile', profileRoutes);
 // app.use('/api/bookings', bookingRoutes);
@@ -57,6 +60,9 @@ app.use('/api/auth', authRoutes);
 // app.use('/api/notifications', notificationRoutes);
 // app.use('/api/admin', adminRoutes);
 // app.use('/api/chat', chatRoutes);
+
+// Serve uploads statically
+app.use('/uploads', express.static('uploads'));
 
 // 404 handler for undefined routes
 app.use('*', (req, res) => {

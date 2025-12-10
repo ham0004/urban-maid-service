@@ -7,8 +7,11 @@ import ChangePassword from './components/profile/ChangePassword';
 
 import Login from './components/auth/Login';
 import Dashboard from './components/common/Dashboard';
-// TODO: Import other components as they are completed
-// import MaidProfile from './components/profile/MaidProfile';
+
+// Maid Verification Components
+import MaidVerification from './components/maid/MaidVerification';
+import VerificationPending from './components/maid/VerificationPending';
+import VerificationRejected from './components/maid/VerificationRejected';
 
 function App() {
   return (
@@ -54,8 +57,11 @@ function App() {
 
           <Route path="/login" element={<Login />} />
           <Route path="/dashboard" element={<Dashboard />} />
-          {/* TODO: Add these routes as team members complete them */}
-          {/* <Route path="/profile/maid" element={<MaidProfile />} /> */}
+
+          {/* Maid Verification Routes (Member-2) */}
+          <Route path="/maid/verification" element={<MaidVerification />} />
+          <Route path="/maid/verification-pending" element={<VerificationPending />} />
+          <Route path="/maid/verification-rejected" element={<VerificationRejected />} />
 
           {/* 404 Not Found */}
           <Route

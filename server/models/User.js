@@ -70,6 +70,44 @@ const userSchema = new mongoose.Schema(
       type: Boolean,
       default: true,
     },
+    // Maid Profile Fields
+    maidProfile: {
+      experience: {
+        type: Number,
+        default: 0,
+      },
+      skills: [
+        {
+          type: String,
+          trim: true,
+        },
+      ],
+      documents: [
+        {
+          docType: {
+            type: String, // e.g., 'NID', 'Passport'
+            enum: ['NID', 'Passport', 'Other'],
+          },
+          url: {
+            type: String,
+          },
+          status: {
+            type: String,
+            enum: ['pending', 'approved', 'rejected'],
+            default: 'pending',
+          },
+          uploadedAt: {
+            type: Date,
+            default: Date.now,
+          },
+        },
+      ],
+      verificationStatus: {
+        type: String,
+        enum: ['unverified', 'pending', 'approved', 'rejected'],
+        default: 'unverified',
+      },
+    },
   },
   {
     timestamps: true, // Automatically adds createdAt and updatedAt
