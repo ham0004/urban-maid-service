@@ -14,6 +14,10 @@ const {
  * @author Member-1 (Module 2)
  */
 
+// Public route for customers to view categories
+router.get('/service-categories', getAllCategories);
+
+// Protected admin routes
 router.use(protect);
 router.use(authorize('admin'));
 
