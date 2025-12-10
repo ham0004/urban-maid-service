@@ -86,8 +86,8 @@ const Login = () => {
           navigate('/maid/verification');
         }
       } else if (userData.role === 'admin') {
-        // Admin goes to admin dashboard (will be implemented in Module 2)
-        navigate('/dashboard');
+        // Admin goes to admin dashboard
+        navigate('/admin/dashboard');
       } else {
         // Customer goes to regular dashboard
         navigate('/dashboard');
@@ -166,8 +166,8 @@ const Login = () => {
               type="submit"
               disabled={loading}
               className={`group relative w-full flex justify-center py-2 px-4 border border-transparent text-sm font-medium rounded-lg text-white ${loading
-                  ? 'bg-indigo-400 cursor-not-allowed'
-                  : 'bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500'
+                ? 'bg-indigo-400 cursor-not-allowed'
+                : 'bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500'
                 }`}
             >
               {loading ? (

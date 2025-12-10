@@ -5,16 +5,15 @@ const config = require('./config/config');
 const errorHandler = require('./middleware/errorHandler');
 
 // Import routes
-// Import routes
 const authRoutes = require('./routes/authRoutes');
 const maidRoutes = require('./routes/maidRoutes');
+const adminRoutes = require('./routes/adminRoutes'); // Module 2 - Admin Service Category Management
 // TODO: Import other routes as team members complete them
 // const profileRoutes = require('./routes/profileRoutes');
 // const bookingRoutes = require('./routes/bookingRoutes');
 // const serviceRoutes = require('./routes/serviceRoutes');
 // const paymentRoutes = require('./routes/paymentRoutes');
 // const notificationRoutes = require('./routes/notificationRoutes');
-// const adminRoutes = require('./routes/adminRoutes');
 // const chatRoutes = require('./routes/chatRoutes');
 
 // Initialize Express app
@@ -52,13 +51,13 @@ app.get('/api/health', (req, res) => {
 // API Routes
 app.use('/api/auth', authRoutes);
 app.use('/api/maids', maidRoutes);
+app.use('/api/admin', adminRoutes); // Module 2 - Admin Service Category Management
 // TODO: Add other routes as team members complete them
 // app.use('/api/profile', profileRoutes);
 // app.use('/api/bookings', bookingRoutes);
 // app.use('/api/services', serviceRoutes);
 // app.use('/api/payments', paymentRoutes);
 // app.use('/api/notifications', notificationRoutes);
-// app.use('/api/admin', adminRoutes);
 // app.use('/api/chat', chatRoutes);
 
 // Serve uploads statically
