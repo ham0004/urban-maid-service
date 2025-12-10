@@ -8,9 +8,9 @@ const errorHandler = require('./middleware/errorHandler');
 const authRoutes = require('./routes/authRoutes');
 const maidRoutes = require('./routes/maidRoutes');
 const adminRoutes = require('./routes/adminRoutes'); // Module 2 - Admin Service Category Management
+const bookingRoutes = require('./routes/bookingRoutes'); // Module 2 - Booking & Conflict Handling
 // TODO: Import other routes as team members complete them
 // const profileRoutes = require('./routes/profileRoutes');
-// const bookingRoutes = require('./routes/bookingRoutes');
 // const serviceRoutes = require('./routes/serviceRoutes');
 // const paymentRoutes = require('./routes/paymentRoutes');
 // const notificationRoutes = require('./routes/notificationRoutes');
@@ -52,9 +52,9 @@ app.get('/api/health', (req, res) => {
 app.use('/api/auth', authRoutes);
 app.use('/api/maids', maidRoutes);
 app.use('/api/admin', adminRoutes); // Module 2 - Admin Service Category Management
+app.use('/api/bookings', bookingRoutes); // Module 2 - Booking & Conflict Handling
 // TODO: Add other routes as team members complete them
 // app.use('/api/profile', profileRoutes);
-// app.use('/api/bookings', bookingRoutes);
 // app.use('/api/services', serviceRoutes);
 // app.use('/api/payments', paymentRoutes);
 // app.use('/api/notifications', notificationRoutes);

@@ -190,8 +190,11 @@ const Dashboard = () => {
             <p className="text-blue-800 mb-4">
               As a maid, you can view available bookings, manage your profile, and track your earnings.
             </p>
-            <button className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition">
-              View Available Bookings
+            <button
+              onClick={() => navigate('/bookings/maid')}
+              className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition"
+            >
+              View My Bookings
             </button>
           </div>
         )}
@@ -202,9 +205,20 @@ const Dashboard = () => {
             <p className="text-green-800 mb-4">
               As a customer, you can book services, manage your bookings, and rate service providers.
             </p>
-            <button className="px-6 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition">
-              Book a Service
-            </button>
+            <div className="space-x-3">
+              <button
+                onClick={() => navigate('/bookings/new')}
+                className="px-6 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition"
+              >
+                Book a Service
+              </button>
+              <button
+                onClick={() => navigate('/bookings/my')}
+                className="px-6 py-2 bg-green-100 text-green-700 rounded-lg hover:bg-green-200 transition"
+              >
+                View My Bookings
+              </button>
+            </div>
           </div>
         )}
 
@@ -214,7 +228,10 @@ const Dashboard = () => {
             <p className="text-red-800 mb-4">
               As an admin, you can manage users, verify maids, and oversee platform activities.
             </p>
-            <button className="px-6 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition">
+            <button
+              onClick={() => navigate('/admin/dashboard')}
+              className="px-6 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition"
+            >
               Admin Panel
             </button>
           </div>

@@ -16,6 +16,11 @@ import VerificationRejected from './components/maid/VerificationRejected';
 // Admin Components (Module 2)
 import AdminDashboard from './components/admin/AdminDashboard';
 
+// Booking Components (Module 2 Feature 2)
+import BookingForm from './components/booking/BookingForm';
+import MyBookings from './components/booking/MyBookings';
+import MaidBookings from './components/booking/MaidBookings';
+
 function App() {
   return (
     <Router>
@@ -63,6 +68,11 @@ function App() {
 
           {/* Admin Routes (Module 2) */}
           <Route path="/admin/dashboard" element={<AdminDashboard />} />
+
+          {/* Booking Routes (Module 2 Feature 2) */}
+          <Route path="/bookings/new" element={<BookingForm />} />
+          <Route path="/bookings/my" element={<MyBookings />} />
+          <Route path="/bookings/maid" element={<MaidBookings />} />
 
           {/* Maid Verification Routes (Member-2) */}
           <Route path="/maid/verification" element={<MaidVerification />} />
