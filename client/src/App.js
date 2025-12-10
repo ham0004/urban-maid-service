@@ -13,6 +13,10 @@ import MaidVerification from './components/maid/MaidVerification';
 import VerificationPending from './components/maid/VerificationPending';
 import VerificationRejected from './components/maid/VerificationRejected';
 
+// Maid Scheduling Components (Module 2 Feature 3 - Member-3)
+import MaidSchedule from './components/maid/MaidSchedule';
+import BlockSlot from './components/maid/BlockSlot';
+
 // Admin Components (Module 2)
 import AdminDashboard from './components/admin/AdminDashboard';
 
@@ -78,6 +82,10 @@ function App() {
           <Route path="/maid/verification" element={<MaidVerification />} />
           <Route path="/maid/verification-pending" element={<VerificationPending />} />
           <Route path="/maid/verification-rejected" element={<VerificationRejected />} />
+
+          {/* Maid Scheduling Routes (Module 2 Feature 3 - Member-3) */}
+          <Route path="/maid/schedule" element={<MaidSchedule />} />
+          <Route path="/maid/block-slot" element={<BlockSlot />} />
 
           {/* 404 Not Found */}
           <Route

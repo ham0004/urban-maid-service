@@ -7,6 +7,7 @@ const errorHandler = require('./middleware/errorHandler');
 // Import routes
 const authRoutes = require('./routes/authRoutes');
 const maidRoutes = require('./routes/maidRoutes');
+const maidScheduleRoutes = require('./routes/maidScheduleRoutes'); // Module 2 - Maid Scheduling & Availability (Member-3)
 const adminRoutes = require('./routes/adminRoutes'); // Module 2 - Admin Service Category Management
 const bookingRoutes = require('./routes/bookingRoutes'); // Module 2 - Booking & Conflict Handling
 // TODO: Import other routes as team members complete them
@@ -51,6 +52,7 @@ app.get('/api/health', (req, res) => {
 // API Routes
 app.use('/api/auth', authRoutes);
 app.use('/api/maids', maidRoutes);
+app.use('/api/maids/schedule', maidScheduleRoutes); // Module 2 - Maid Scheduling & Availability (Member-3)
 app.use('/api/admin', adminRoutes); // Module 2 - Admin Service Category Management
 app.use('/api/bookings', bookingRoutes); // Module 2 - Booking & Conflict Handling
 // TODO: Add other routes as team members complete them

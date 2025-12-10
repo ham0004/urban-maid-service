@@ -107,6 +107,50 @@ const userSchema = new mongoose.Schema(
         enum: ['unverified', 'pending', 'approved', 'rejected'],
         default: 'unverified',
       },
+      // Scheduling Fields (Member-3, Module 2)
+      weeklySchedule: [
+        {
+          dayOfWeek: {
+            type: Number,
+            required: true,
+            min: 0,
+            max: 6, // 0 = Monday, 6 = Sunday
+          },
+          isAvailable: {
+            type: Boolean,
+            default: false,
+          },
+          startTime: {
+            type: String, // Format: "HH:MM" (24-hour)
+            default: '09:00',
+          },
+          endTime: {
+            type: String, // Format: "HH:MM" (24-hour)
+            default: '18:00',
+          },
+        },
+      ],
+      blockedSlots: [
+        {
+          date: {
+            type: Date,
+            required: true,
+          },
+          reason: {
+            type: String,
+            trim: true,
+            maxlength: [200, 'Reason cannot exceed 200 characters'],
+          },
+          startTime: {
+            type: String, // Format: "HH:MM" for partial day blocks
+            default: '00:00',
+          },
+          endTime: {
+            type: String, // Format: "HH:MM"
+            default: '23:59',
+          },
+        },
+      ],
     },
   },
   {
