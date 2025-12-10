@@ -5,8 +5,9 @@ import EmailVerification from './components/auth/EmailVerification';
 import UpdateProfile from './components/profile/UpdateProfile';
 import ChangePassword from './components/profile/ChangePassword';
 
+import Login from './components/auth/Login';
+import Dashboard from './components/common/Dashboard';
 // TODO: Import other components as they are completed
-// import Login from './components/auth/Login';
 // import MaidProfile from './components/profile/MaidProfile';
 
 function App() {
@@ -51,8 +52,9 @@ function App() {
           <Route path="/profile/update" element={<UpdateProfile />} />
           <Route path="/profile/change-password" element={<ChangePassword />} />
 
+          <Route path="/login" element={<Login />} />
+          <Route path="/dashboard" element={<Dashboard />} />
           {/* TODO: Add these routes as team members complete them */}
-          {/* <Route path="/login" element={<Login />} /> */}
           {/* <Route path="/profile/maid" element={<MaidProfile />} /> */}
 
           {/* 404 Not Found */}
