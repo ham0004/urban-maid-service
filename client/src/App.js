@@ -25,6 +25,10 @@ import BookingForm from './components/booking/BookingForm';
 import MyBookings from './components/booking/MyBookings';
 import MaidBookings from './components/booking/MaidBookings';
 
+// Member-4 Components (Search & Filter)
+import MaidSearch from './components/maid/MaidSearch';
+import MaidProfileSetup from './components/maid/MaidProfileSetup';
+
 function App() {
   return (
     <Router>
@@ -86,6 +90,10 @@ function App() {
           {/* Maid Scheduling Routes (Module 2 Feature 3 - Member-3) */}
           <Route path="/maid/schedule" element={<MaidSchedule />} />
           <Route path="/maid/block-slot" element={<BlockSlot />} />
+
+          {/* Member-4 Routes (Search & Profile Setup) */}
+          <Route path="/search-maids" element={<MaidSearch />} />
+          <Route path="/maid/profile-setup" element={<MaidProfileSetup />} />
 
           {/* 404 Not Found */}
           <Route
