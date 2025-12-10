@@ -64,7 +64,7 @@ const EmailVerification = () => {
   }, [verifyEmail]);
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-indigo-500 to-purple-600 py-12 px-4 sm:px-6 lg:px-8">
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-green-500 to-emerald-600 py-12 px-4 sm:px-6 lg:px-8">
       <div className="max-w-md w-full space-y-8 bg-white p-10 rounded-xl shadow-2xl">
 
         {/* Verifying State */}
@@ -72,7 +72,7 @@ const EmailVerification = () => {
           <div className="text-center">
             <div className="flex justify-center mb-4">
               <svg
-                className="animate-spin h-16 w-16 text-indigo-600"
+                className="animate-spin h-16 w-16 text-green-600"
                 xmlns="http://www.w3.org/2000/svg"
                 fill="none"
                 viewBox="0 0 24 24"
@@ -124,7 +124,7 @@ const EmailVerification = () => {
             </div>
             <button
               onClick={() => navigate('/login')}
-              className="w-full bg-indigo-600 text-white py-2 px-4 rounded-lg hover:bg-indigo-700 transition"
+              className="w-full bg-green-600 text-white py-2 px-4 rounded-lg hover:bg-green-700 transition"
             >
               Go to Login Now
             </button>
@@ -164,7 +164,7 @@ const EmailVerification = () => {
             <div className="space-y-2">
               <button
                 onClick={() => navigate('/register')}
-                className="w-full bg-indigo-600 text-white py-2 px-4 rounded-lg hover:bg-indigo-700 transition"
+                className="w-full bg-green-600 text-white py-2 px-4 rounded-lg hover:bg-green-700 transition"
               >
                 Register Again
               </button>

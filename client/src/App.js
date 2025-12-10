@@ -19,7 +19,7 @@ function App() {
             element={
               <div className="flex items-center justify-center min-h-screen">
                 <div className="text-center">
-                  <h1 className="text-4xl font-bold text-indigo-600 mb-4">
+                  <h1 className="text-4xl font-bold text-green-600 mb-4">
                     🏠 Urban Maid Service
                   </h1>
                   <p className="text-gray-600 mb-8">
@@ -28,7 +28,7 @@ function App() {
                   <div className="space-x-4">
                     <a
                       href="/register"
-                      className="px-6 py-3 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition"
+                      className="px-6 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 transition"
                     >
                       Get Started
                     </a>
@@ -63,7 +63,7 @@ function App() {
                   <p className="text-xl text-gray-600 mb-8">Page not found</p>
                   <a
                     href="/"
-                    className="px-6 py-3 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition"
+                    className="px-6 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 transition"
                   >
                     Go Home
                   </a>
