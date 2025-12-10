@@ -107,7 +107,35 @@ const userSchema = new mongoose.Schema(
         enum: ['unverified', 'pending', 'approved', 'rejected'],
         default: 'unverified',
       },
+      // ========================================
+      // MEMBER-4 (22101057) - Module 2 Feature 4
+      // Search & Filter Fields
+      // ========================================
+      serviceTypes: {
+        type: [String],
+        default: [],
+      },
+      hourlyRate: {
+        type: Number,
+        default: 0,
+      },
+      rating: {
+        type: Number,
+        default: 0.0,
+        min: 0,
+        max: 5,
+      },
+      totalReviews: {
+        type: Number,
+        default: 0,
+      },
+      isAvailableToday: {
+        type: Boolean,
+        default: true,
+      },
+      // ========================================
       // Scheduling Fields (Member-3, Module 2)
+      // ========================================
       weeklySchedule: [
         {
           dayOfWeek: {
