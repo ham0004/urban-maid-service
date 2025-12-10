@@ -65,8 +65,33 @@ const Login = () => {
         password: '',
       });
 
-      // Redirect to dashboard after successful login
-      navigate('/dashboard');
+      // Redirect based on role and verification status
+      const userData = response.data.user;
+
+      if (userData.role === 'maid') {
+        // Check maid verification status
+        const verificationStatus = userData.maidProfile?.verificationStatus || 'unverified';
+
+        if (verificationStatus === 'approved') {
+          // Maid is fully verified by admin, go to dashboard
+          navigate('/dashboard');
+        } else if (verificationStatus === 'pending') {
+          // Maid has submitted documents, waiting for admin
+          navigate('/maid/verification-pending');
+        } else if (verificationStatus === 'rejected') {
+          // Maid was rejected, show rejection page
+          navigate('/maid/verification-rejected');
+        } else {
+          // Maid is unverified, needs to submit documents
+          navigate('/maid/verification');
+        }
+      } else if (userData.role === 'admin') {
+        // Admin goes to admin dashboard (will be implemented in Module 2)
+        navigate('/dashboard');
+      } else {
+        // Customer goes to regular dashboard
+        navigate('/dashboard');
+      }
     } catch (err) {
       if (err.response?.status === 403) {
         // Email not verified
@@ -140,11 +165,10 @@ const Login = () => {
             <button
               type="submit"
               disabled={loading}
-              className={`group relative w-full flex justify-center py-2 px-4 border border-transparent text-sm font-medium rounded-lg text-white ${
-                loading
+              className={`group relative w-full flex justify-center py-2 px-4 border border-transparent text-sm font-medium rounded-lg text-white ${loading
                   ? 'bg-indigo-400 cursor-not-allowed'
                   : 'bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500'
-              }`}
+                }`}
             >
               {loading ? (
                 <span className="flex items-center">

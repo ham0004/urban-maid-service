@@ -192,18 +192,29 @@ exports.loginUser = async (req, res, next) => {
     const { generateToken } = require('../utils/jwtUtils');
     const token = generateToken(user._id);
 
+    // Build response object
+    const responseUser = {
+      id: user._id,
+      name: user.name,
+      email: user.email,
+      role: user.role,
+      isVerified: user.isVerified, // Email verification
+    };
+
+    // For maids, include maidProfile verification status
+    if (user.role === 'maid') {
+      responseUser.maidProfile = {
+        verificationStatus: user.maidProfile?.verificationStatus || 'unverified',
+        hasSubmittedDocuments: user.maidProfile?.documents?.length > 0 || false,
+      };
+    }
+
     // Return success response with token
     res.status(200).json({
       success: true,
       message: 'Login successful',
       token,
-      user: {
-        id: user._id,
-        name: user.name,
-        email: user.email,
-        role: user.role,
-        isVerified: user.isVerified,
-      },
+      user: responseUser,
     });
   } catch (error) {
     next(error);

@@ -76,13 +76,12 @@ const Dashboard = () => {
         <div className="bg-white rounded-lg shadow-md p-8 mb-8">
           <div className="flex items-center justify-between mb-6">
             <h2 className="text-3xl font-bold text-gray-900">Dashboard</h2>
-            <span className={`px-4 py-2 rounded-full text-sm font-medium ${
-              user.role === 'maid'
-                ? 'bg-blue-100 text-blue-800'
-                : user.role === 'admin'
+            <span className={`px-4 py-2 rounded-full text-sm font-medium ${user.role === 'maid'
+              ? 'bg-blue-100 text-blue-800'
+              : user.role === 'admin'
                 ? 'bg-red-100 text-red-800'
                 : 'bg-green-100 text-green-800'
-            }`}>
+              }`}>
               {user.role.charAt(0).toUpperCase() + user.role.slice(1)}
             </span>
           </div>
@@ -101,9 +100,25 @@ const Dashboard = () => {
               <div>
                 <label className="text-sm font-medium text-gray-600">Account Status</label>
                 <p className="text-lg">
-                  <span className="inline-block px-3 py-1 bg-green-100 text-green-800 rounded-full text-sm font-medium">
-                    ✅ Verified
-                  </span>
+                  {user.role === 'maid' ? (
+                    <span className={`inline-block px-3 py-1 rounded-full text-sm font-medium ${user.maidProfile?.verificationStatus === 'approved'
+                      ? 'bg-green-100 text-green-800'
+                      : user.maidProfile?.verificationStatus === 'pending'
+                        ? 'bg-yellow-100 text-yellow-800'
+                        : user.maidProfile?.verificationStatus === 'rejected'
+                          ? 'bg-red-100 text-red-800'
+                          : 'bg-gray-100 text-gray-800'
+                      }`}>
+                      {user.maidProfile?.verificationStatus === 'approved' && '✅ Verified'}
+                      {user.maidProfile?.verificationStatus === 'pending' && '⏳ Pending Review'}
+                      {user.maidProfile?.verificationStatus === 'rejected' && '❌ Rejected'}
+                      {(!user.maidProfile?.verificationStatus || user.maidProfile?.verificationStatus === 'unverified') && '⚠️ Unverified'}
+                    </span>
+                  ) : (
+                    <span className="inline-block px-3 py-1 bg-green-100 text-green-800 rounded-full text-sm font-medium">
+                      ✅ Verified
+                    </span>
+                  )}
                 </p>
               </div>
             </div>
@@ -133,7 +148,10 @@ const Dashboard = () => {
             <div className="text-4xl mb-3">👤</div>
             <h3 className="text-xl font-bold text-gray-900 mb-2">My Profile</h3>
             <p className="text-gray-600 mb-4">View and update your profile information</p>
-            <button className="w-full px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition">
+            <button
+              onClick={() => navigate('/profile/update')}
+              className="w-full px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition"
+            >
               Go to Profile
             </button>
           </div>
@@ -143,7 +161,10 @@ const Dashboard = () => {
             <div className="text-4xl mb-3">⚙️</div>
             <h3 className="text-xl font-bold text-gray-900 mb-2">Settings</h3>
             <p className="text-gray-600 mb-4">Manage your account settings and preferences</p>
-            <button className="w-full px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition">
+            <button
+              onClick={() => navigate('/profile/update')}
+              className="w-full px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition"
+            >
               Go to Settings
             </button>
           </div>
@@ -153,7 +174,10 @@ const Dashboard = () => {
             <div className="text-4xl mb-3">🔒</div>
             <h3 className="text-xl font-bold text-gray-900 mb-2">Security</h3>
             <p className="text-gray-600 mb-4">Change your password and security settings</p>
-            <button className="w-full px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition">
+            <button
+              onClick={() => navigate('/profile/change-password')}
+              className="w-full px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition"
+            >
               Change Password
             </button>
           </div>
