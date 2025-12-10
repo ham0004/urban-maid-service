@@ -13,6 +13,9 @@ import MaidVerification from './components/maid/MaidVerification';
 import VerificationPending from './components/maid/VerificationPending';
 import VerificationRejected from './components/maid/VerificationRejected';
 
+// Admin Components (Module 2)
+import AdminDashboard from './components/admin/AdminDashboard';
+
 function App() {
   return (
     <Router>
@@ -57,6 +60,9 @@ function App() {
 
           <Route path="/login" element={<Login />} />
           <Route path="/dashboard" element={<Dashboard />} />
+
+          {/* Admin Routes (Module 2) */}
+          <Route path="/admin/dashboard" element={<AdminDashboard />} />
 
           {/* Maid Verification Routes (Member-2) */}
           <Route path="/maid/verification" element={<MaidVerification />} />
