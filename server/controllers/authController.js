@@ -1,6 +1,7 @@
 const crypto = require('crypto');
 const User = require('../models/User');
 const { sendVerificationEmail } = require('../services/emailService');
+const config = require('../config/config');
 
 /**
  * @desc    Register new user
@@ -41,7 +42,7 @@ exports.registerUser = async (req, res, next) => {
       role: role || 'customer',
       verificationToken,
       verificationTokenExpire,
-      isVerified: false,
+      isVerified: config.NODE_ENV === 'development',
     });
 
     // Send verification email
@@ -170,7 +171,7 @@ exports.loginUser = async (req, res, next) => {
     }
 
     // Check if email is verified
-    if (!user.isVerified) {
+    if (!user.isVerified && config.NODE_ENV !== 'development') {
       return res.status(403).json({
         success: false,
         message: 'Please verify your email before logging in',
@@ -285,8 +286,11 @@ exports.updateProfile = async (req, res, next) => {
     if (name) user.name = name;
     if (phone) user.phone = phone;
     if (address) {
+      // Use toObject() to get plain object if user.address exists, or empty object
+      const currentAddress = user.address ? user.address.toObject() : {};
+
       user.address = {
-        ...user.address,
+        ...currentAddress,
         ...address,
       };
     }
