@@ -1,6 +1,7 @@
 const Booking = require('../models/Booking');
 const User = require('../models/User');
 const ServiceCategory = require('../models/ServiceCategory');
+const { deductFromSubscription } = require('./subscriptionController'); // Module 3 Feature 1
 
 /**
  * @desc    Create a new booking
@@ -192,6 +193,17 @@ exports.updateBookingStatus = async (req, res, next) => {
         }
         if (status === 'completed') {
             booking.completedAt = new Date();
+
+            // Module 3 Feature 1: Deduct from customer's subscription if active
+            try {
+                const unitsToDeduct = booking.duration ? Math.ceil(booking.duration / 60) : 1;
+                const subscription = await deductFromSubscription(booking.customer, booking._id, 1);
+                if (subscription) {
+                    console.log(`✅ Deducted 1 work from subscription for customer ${booking.customer}`);
+                }
+            } catch (subError) {
+                console.log('No active subscription or deduction not needed:', subError.message);
+            }
         }
 
         await booking.save();

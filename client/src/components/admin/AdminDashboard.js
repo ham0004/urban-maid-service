@@ -230,6 +230,12 @@ const AdminDashboard = () => {
                             </span>
                         </div>
                         <div className="flex items-center space-x-4">
+                            <a
+                                href="/admin/subscriptions"
+                                className="px-4 py-2 bg-emerald-500/20 text-emerald-400 rounded-lg hover:bg-emerald-500/30 transition-all duration-200 border border-emerald-500/30"
+                            >
+                                📦 Subscriptions
+                            </a>
                             <span className="text-slate-300 hidden sm:block">Welcome, {user?.name}!</span>
                             <button
                                 onClick={handleLogout}
@@ -531,8 +537,8 @@ const AdminDashboard = () => {
                                                 type="submit"
                                                 disabled={formLoading || !isFormValid}
                                                 className={`flex-1 px-6 py-3 rounded-xl font-medium transition-all flex items-center justify-center ${isFormValid
-                                                        ? 'bg-gradient-to-r from-indigo-500 to-purple-500 text-white hover:from-indigo-600 hover:to-purple-600'
-                                                        : 'bg-slate-600/50 text-slate-400 cursor-not-allowed'
+                                                    ? 'bg-gradient-to-r from-indigo-500 to-purple-500 text-white hover:from-indigo-600 hover:to-purple-600'
+                                                    : 'bg-slate-600/50 text-slate-400 cursor-not-allowed'
                                                     } ${formLoading ? 'opacity-50 cursor-not-allowed' : ''}`}
                                             >
                                                 {formLoading ? 'Saving...' : (modalMode === 'create' ? 'Create Category' : 'Save Changes')}
