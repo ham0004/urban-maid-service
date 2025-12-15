@@ -361,8 +361,8 @@ const AdminDashboard = () => {
                                     <button
                                         onClick={() => handleToggleActive(category)}
                                         className={`flex-1 px-4 py-2 rounded-lg transition-all text-sm font-medium ${category.isActive
-                                                ? 'bg-amber-500/20 text-amber-400 hover:bg-amber-500/30'
-                                                : 'bg-emerald-500/20 text-emerald-400 hover:bg-emerald-500/30'
+                                            ? 'bg-amber-500/20 text-amber-400 hover:bg-amber-500/30'
+                                            : 'bg-emerald-500/20 text-emerald-400 hover:bg-emerald-500/30'
                                             }`}
                                     >
                                         {category.isActive ? 'Deactivate' : 'Activate'}
@@ -442,8 +442,8 @@ const AdminDashboard = () => {
                                                 type="button"
                                                 onClick={() => setFormData({ ...formData, icon })}
                                                 className={`w-12 h-12 text-2xl rounded-xl flex items-center justify-center transition-all ${formData.icon === icon
-                                                        ? 'bg-indigo-500/30 border-2 border-indigo-500'
-                                                        : 'bg-slate-900/50 border border-slate-600/50 hover:border-slate-500'
+                                                    ? 'bg-indigo-500/30 border-2 border-indigo-500'
+                                                    : 'bg-slate-900/50 border border-slate-600/50 hover:border-slate-500'
                                                     }`}
                                             >
                                                 {icon}
@@ -522,13 +522,23 @@ const AdminDashboard = () => {
                                     >
                                         Cancel
                                     </button>
-                                    <button
-                                        type="submit"
-                                        disabled={formLoading}
-                                        className="flex-1 px-6 py-3 bg-gradient-to-r from-indigo-500 to-purple-500 text-white rounded-xl font-medium hover:from-indigo-600 hover:to-purple-600 transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center"
-                                    >
-                                        {formLoading ? 'Saving...' : (modalMode === 'create' ? 'Create Category' : 'Save Changes')}
-                                    </button>
+                                    {(() => {
+                                        const hasValidName = formData.name.trim().length > 0;
+                                        const hasValidPricing = formData.pricing.some(p => p.name.trim() && p.price && p.duration);
+                                        const isFormValid = hasValidName && hasValidPricing;
+                                        return (
+                                            <button
+                                                type="submit"
+                                                disabled={formLoading || !isFormValid}
+                                                className={`flex-1 px-6 py-3 rounded-xl font-medium transition-all flex items-center justify-center ${isFormValid
+                                                        ? 'bg-gradient-to-r from-indigo-500 to-purple-500 text-white hover:from-indigo-600 hover:to-purple-600'
+                                                        : 'bg-slate-600/50 text-slate-400 cursor-not-allowed'
+                                                    } ${formLoading ? 'opacity-50 cursor-not-allowed' : ''}`}
+                                            >
+                                                {formLoading ? 'Saving...' : (modalMode === 'create' ? 'Create Category' : 'Save Changes')}
+                                            </button>
+                                        );
+                                    })()}
                                 </div>
                             </form>
                         </div>
