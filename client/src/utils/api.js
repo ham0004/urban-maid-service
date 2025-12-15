@@ -1,7 +1,7 @@
 import axios from 'axios';
 
 const api = axios.create({
-  baseURL: process.env.REACT_APP_API_URL || 'http://localhost:5000/api',
+  baseURL: process.env.REACT_APP_API_URL || 'http://localhost:5001/api',
   headers: {
     'Content-Type': 'application/json',
   },
@@ -27,14 +27,14 @@ api.interceptors.response.use(
   (error) => {
     if (error.response) {
       const message = error.response.data?.message || 'Something went wrong';
-      
+
       // Handle 401 Unauthorized
       if (error.response.status === 401) {
         localStorage.removeItem('token');
         localStorage.removeItem('user');
         window.location.href = '/login';
       }
-      
+
       return Promise.reject(new Error(message));
     } else if (error.request) {
       return Promise.reject(new Error('Network error. Please check your connection.'));
