@@ -194,8 +194,8 @@ const MaidApprovalAdmin = () => {
                                 key={status}
                                 onClick={() => setStatusFilter(status)}
                                 className={`px-4 py-2 rounded-lg font-medium transition-all ${statusFilter === status
-                                        ? 'bg-indigo-500 text-white'
-                                        : 'bg-slate-700/50 text-slate-300 hover:bg-slate-700'
+                                    ? 'bg-indigo-500 text-white'
+                                    : 'bg-slate-700/50 text-slate-300 hover:bg-slate-700'
                                     }`}
                             >
                                 {status.charAt(0).toUpperCase() + status.slice(1)}
@@ -261,7 +261,7 @@ const MaidApprovalAdmin = () => {
                                                 {maid.maidProfile.documents.map((doc, idx) => (
                                                     <a
                                                         key={idx}
-                                                        href={`http://localhost:5000/${doc.url}`}
+                                                        href={doc.url.startsWith('http') ? doc.url : `http://localhost:5000/${doc.url}`}
                                                         target="_blank"
                                                         rel="noopener noreferrer"
                                                         className="px-3 py-1 bg-blue-500/20 text-blue-400 rounded-lg text-sm hover:bg-blue-500/30 transition-all"
