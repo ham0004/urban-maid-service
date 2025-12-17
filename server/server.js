@@ -14,7 +14,7 @@ const subscriptionRoutes = require('./routes/subscriptionRoutes'); // Module 3 -
 // TODO: Import other routes as team members complete them
 // const profileRoutes = require('./routes/profileRoutes');
 // const serviceRoutes = require('./routes/serviceRoutes');
-// const paymentRoutes = require('./routes/paymentRoutes');
+const paymentRoutes = require('./routes/paymentRoutes');
 // const notificationRoutes = require('./routes/notificationRoutes');
 // const chatRoutes = require('./routes/chatRoutes');
 
@@ -60,7 +60,7 @@ app.use('/api/subscriptions', subscriptionRoutes); // Module 3 - Subscription & 
 // TODO: Add other routes as team members complete them
 // app.use('/api/profile', profileRoutes);
 // app.use('/api/services', serviceRoutes);
-// app.use('/api/payments', paymentRoutes);
+app.use('/api/payments', paymentRoutes);
 // app.use('/api/notifications', notificationRoutes);
 // app.use('/api/chat', chatRoutes);
 
