@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import api from '../../utils/api';
+import MaidPaymentConfirmation from '../payment/MaidPaymentConfirmation';
 
 const MaidBookings = () => {
     const navigate = useNavigate();
@@ -110,34 +111,42 @@ const MaidBookings = () => {
                                 </div>
 
                                 {/* Action Buttons */}
-                                <div className="mt-4 pt-4 border-t flex gap-3">
-                                    {booking.status === 'pending' && (
-                                        <>
+                                <div className="mt-4 pt-4 border-t">
+
+                                    {/* Payment Confirmation Component - Only visible to maid when needed */}
+                                    <div className="mb-3">
+                                        <MaidPaymentConfirmation bookingId={booking._id} />
+                                    </div>
+
+                                    <div className="flex gap-3">
+                                        {booking.status === 'pending' && (
+                                            <>
+                                                <button
+                                                    onClick={() => handleStatusUpdate(booking._id, 'accepted')}
+                                                    disabled={actionLoading === booking._id}
+                                                    className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:opacity-50"
+                                                >
+                                                    ✓ Accept
+                                                </button>
+                                                <button
+                                                    onClick={() => handleReject(booking._id)}
+                                                    disabled={actionLoading === booking._id}
+                                                    className="px-4 py-2 bg-red-100 text-red-700 rounded-lg hover:bg-red-200 disabled:opacity-50"
+                                                >
+                                                    ✕ Reject
+                                                </button>
+                                            </>
+                                        )}
+                                        {booking.status === 'accepted' && (
                                             <button
-                                                onClick={() => handleStatusUpdate(booking._id, 'accepted')}
+                                                onClick={() => handleStatusUpdate(booking._id, 'completed')}
                                                 disabled={actionLoading === booking._id}
-                                                className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:opacity-50"
+                                                className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50"
                                             >
-                                                ✓ Accept
+                                                ✓ Mark Completed
                                             </button>
-                                            <button
-                                                onClick={() => handleReject(booking._id)}
-                                                disabled={actionLoading === booking._id}
-                                                className="px-4 py-2 bg-red-100 text-red-700 rounded-lg hover:bg-red-200 disabled:opacity-50"
-                                            >
-                                                ✕ Reject
-                                            </button>
-                                        </>
-                                    )}
-                                    {booking.status === 'accepted' && (
-                                        <button
-                                            onClick={() => handleStatusUpdate(booking._id, 'completed')}
-                                            disabled={actionLoading === booking._id}
-                                            className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50"
-                                        >
-                                            ✓ Mark Completed
-                                        </button>
-                                    )}
+                                        )}
+                                    </div>
                                 </div>
                             </div>
                         ))}

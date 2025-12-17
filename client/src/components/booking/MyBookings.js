@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import api from '../../utils/api';
+import CustomerPaymentAction from '../payment/CustomerPaymentAction';
 
 const MyBookings = () => {
     const navigate = useNavigate();
@@ -105,9 +106,14 @@ const MyBookings = () => {
                                 </div>
                                 {['pending', 'accepted'].includes(booking.status) && (
                                     <div className="mt-4 pt-4 border-t">
+                                        {/* Payment Component */}
+                                        <div className="mb-3">
+                                            <CustomerPaymentAction bookingId={booking._id} />
+                                        </div>
+
                                         <button
                                             onClick={() => handleCancel(booking._id)}
-                                            className="px-4 py-2 bg-red-100 text-red-700 rounded-lg hover:bg-red-200"
+                                            className="w-full px-4 py-2 bg-red-100 text-red-700 rounded-lg hover:bg-red-200 text-sm"
                                         >
                                             Cancel Booking
                                         </button>

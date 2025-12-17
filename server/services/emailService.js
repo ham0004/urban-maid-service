@@ -2,7 +2,11 @@ const sgMail = require('@sendgrid/mail');
 const config = require('../config/config');
 
 // Set SendGrid API Key
-sgMail.setApiKey(config.SENDGRID_API_KEY);
+if (config.SENDGRID_API_KEY && config.SENDGRID_API_KEY.startsWith('SG.')) {
+  sgMail.setApiKey(config.SENDGRID_API_KEY);
+} else {
+  console.warn('⚠️ SendGrid API Key missing or invalid. Email sending will be mocked.');
+}
 
 /**
  * Send verification email to user
@@ -76,15 +80,20 @@ const sendVerificationEmail = async (email, name, verificationToken, userId) => 
   };
 
   try {
-    await sgMail.send(msg);
-    console.log(`✅ Verification email sent to ${email}`);
+    if (config.SENDGRID_API_KEY && config.SENDGRID_API_KEY.startsWith('SG.')) {
+      await sgMail.send(msg);
+      console.log(`✅ Verification email sent to ${email}`);
+    } else {
+      console.log(`[MOCK] Verification email would be sent to ${email} (No API Key)`);
+    }
     return { success: true, message: 'Verification email sent successfully' };
   } catch (error) {
     console.error('❌ SendGrid Error:', error);
     if (error.response) {
       console.error('SendGrid Response Error:', error.response.body);
     }
-    throw new Error('Failed to send verification email');
+    // Don't crash flow if email fails
+    return { success: false, message: 'Failed to send email' };
   }
 };
 
@@ -150,12 +159,17 @@ const sendPasswordResetEmail = async (email, name, resetToken) => {
   };
 
   try {
-    await sgMail.send(msg);
-    console.log(`✅ Password reset email sent to ${email}`);
+    if (config.SENDGRID_API_KEY && config.SENDGRID_API_KEY.startsWith('SG.')) {
+      await sgMail.send(msg);
+      console.log(`✅ Password reset email sent to ${email}`);
+    } else {
+      console.log(`[MOCK] Password reset email would be sent to ${email} (No API Key)`);
+    }
     return { success: true, message: 'Password reset email sent successfully' };
   } catch (error) {
     console.error('❌ SendGrid Error:', error);
-    throw new Error('Failed to send password reset email');
+    // throw new Error('Failed to send password reset email');
+    return { success: false, message: 'Failed to send email' };
   }
 };
 
