@@ -1,5 +1,6 @@
 const Payment = require('../models/Payment');
 const Booking = require('../models/Booking');
+const Invoice = require('../models/Invoice');
 
 // @desc    Initiate payment (Customer marks as paid)
 // @route   POST /api/payments/initiate
@@ -60,6 +61,50 @@ exports.confirmPayment = async (req, res, next) => {
 
         payment.status = 'succeeded';
         await payment.save();
+
+        // Automatically generate invoice after successful payment confirmation
+        try {
+            // Check if invoice already exists
+            const existingInvoice = await Invoice.findOne({ booking: payment.booking });
+
+            if (!existingInvoice) {
+                // Fetch booking details for invoice generation
+                const booking = await Booking.findById(payment.booking)
+                    .populate('customer', 'name email address')
+                    .populate('serviceCategory', 'name icon');
+
+                if (booking) {
+                    // Generate invoice number
+                    const invoiceNumber = await Invoice.generateInvoiceNumber();
+
+                    // Create invoice record (no PDF generation - data stored in MongoDB)
+                    await Invoice.create({
+                        invoiceNumber,
+                        user: booking.customer._id,
+                        booking: booking._id,
+                        invoiceType: 'booking',
+                        amount: booking.totalPrice,
+                        tax: 0,
+                        totalAmount: booking.totalPrice,
+                        items: [
+                            {
+                                description: `${booking.serviceCategory?.name || 'Service'} - ${booking.duration} mins`,
+                                quantity: 1,
+                                unitPrice: booking.totalPrice,
+                                total: booking.totalPrice,
+                            },
+                        ],
+                        paymentStatus: 'completed',
+                        paymentMethod: payment.paymentMethod || 'Card',
+                    });
+
+                    console.log(`Invoice ${invoiceNumber} generated for booking ${booking._id}`);
+                }
+            }
+        } catch (invoiceError) {
+            // Log error but don't fail the payment confirmation
+            console.error('Error generating invoice:', invoiceError);
+        }
 
         res.status(200).json({
             success: true,

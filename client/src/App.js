@@ -30,10 +30,13 @@ import MaidBookings from './components/booking/MaidBookings';
 import MaidSearch from './components/maid/MaidSearch';
 import MaidProfileSetup from './components/maid/MaidProfileSetup';
 
-// Module 3 Feature 1: Subscription & Membership Plans (Member-1)
+// Module 3 Feature 1: Subscription Routes (Member-1)
 import SubscriptionPlans from './components/subscription/SubscriptionPlans';
 import MySubscription from './components/subscription/MySubscription';
 import SubscriptionPlansAdmin from './components/subscription/SubscriptionPlansAdmin';
+
+// Module 3 Feature 3: Service History & Invoice (Member-2)
+import ServiceHistory from './components/history/ServiceHistory';
 
 function App() {
   return (
@@ -106,6 +109,9 @@ function App() {
           <Route path="/subscription-plans" element={<SubscriptionPlans />} />
           <Route path="/my-subscription" element={<MySubscription />} />
           <Route path="/admin/subscriptions" element={<SubscriptionPlansAdmin />} />
+
+          {/* Module 3 Feature 3: Service History & Invoice (Member-2) */}
+          <Route path="/history" element={<ServiceHistory />} />
 
           {/* 404 Not Found */}
           <Route
