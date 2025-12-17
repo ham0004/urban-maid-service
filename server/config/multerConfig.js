@@ -1,33 +1,29 @@
 const multer = require('multer');
 const path = require('path');
-const fs = require('fs');
+const { CloudinaryStorage } = require('multer-storage-cloudinary');
+const cloudinary = require('cloudinary').v2;
 
-// Ensure uploads directory exists
-const uploadDir = 'uploads/';
-if (!fs.existsSync(uploadDir)) {
-    fs.mkdirSync(uploadDir);
-}
+// Configure Cloudinary
+cloudinary.config({
+    cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
+    api_key: process.env.CLOUDINARY_API_KEY,
+    api_secret: process.env.CLOUDINARY_API_SECRET,
+});
 
-// Set storage engine
-const storage = multer.diskStorage({
-    destination: function (req, file, cb) {
-        cb(null, 'uploads/');
-    },
-    filename: function (req, file, cb) {
-        cb(
-            null,
-            file.fieldname + '-' + Date.now() + path.extname(file.originalname)
-        );
+// Cloudinary storage for maid documents
+const storage = new CloudinaryStorage({
+    cloudinary: cloudinary,
+    params: {
+        folder: 'urban-maid-service/documents',
+        resource_type: 'auto', // Allows images and PDFs
+        allowed_formats: ['jpg', 'jpeg', 'png', 'pdf'],
     },
 });
 
 // Check file type
 function checkFileType(file, cb) {
-    // Allowed ext
     const filetypes = /jpeg|jpg|png|pdf/;
-    // Check ext
     const extname = filetypes.test(path.extname(file.originalname).toLowerCase());
-    // Check mime
     const mimetype = filetypes.test(file.mimetype);
 
     if (mimetype && extname) {
@@ -37,7 +33,7 @@ function checkFileType(file, cb) {
     }
 }
 
-// Init upload
+// Init upload with Cloudinary
 const upload = multer({
     storage: storage,
     limits: { fileSize: 5000000 }, // 5MB limit
