@@ -2,12 +2,14 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import api from '../../utils/api';
 import CustomerPaymentAction from '../payment/CustomerPaymentAction';
+import ReviewForm from '../review/ReviewForm';
 
 const MyBookings = () => {
     const navigate = useNavigate();
     const [bookings, setBookings] = useState([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState('');
+    const [reviewBookingId, setReviewBookingId] = useState(null);
 
     useEffect(() => {
         const fetchBookings = async () => {
@@ -119,6 +121,16 @@ const MyBookings = () => {
                                         </button>
                                     </div>
                                 )}
+                                {booking.status === 'completed' && (
+                                    <div className="mt-4 pt-4 border-t">
+                                        <button
+                                            onClick={() => setReviewBookingId(booking._id)}
+                                            className="w-full px-4 py-2 bg-yellow-100 text-yellow-700 rounded-lg hover:bg-yellow-200 text-sm font-medium"
+                                        >
+                                            ★ Rate & Review Service
+                                        </button>
+                                    </div>
+                                )}
                             </div>
                         ))}
                     </div>
@@ -130,6 +142,17 @@ const MyBookings = () => {
                     </button>
                 </div>
             </div>
+            {reviewBookingId && (
+                <ReviewForm
+                    bookingId={reviewBookingId}
+                    onReviewSubmitted={() => {
+                        setReviewBookingId(null);
+                        // Optional: Refresh bookings or show success message
+                        alert('Thank you for your review!');
+                    }}
+                    onClose={() => setReviewBookingId(null)}
+                />
+            )}
         </div>
     );
 };
