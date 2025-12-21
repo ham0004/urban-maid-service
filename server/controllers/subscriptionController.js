@@ -1,5 +1,6 @@
 const SubscriptionPlan = require('../models/SubscriptionPlan');
 const UserSubscription = require('../models/UserSubscription');
+const Invoice = require('../models/Invoice');
 
 /**
  * Subscription Controller
@@ -227,6 +228,38 @@ exports.subscribeToPlan = async (req, res, next) => {
 
         // Populate plan details
         await subscription.populate('plan');
+
+        // Automatically generate invoice for subscription
+        try {
+            // Generate invoice number
+            const invoiceNumber = await Invoice.generateInvoiceNumber();
+
+            // Create invoice record (no PDF generation - data stored in MongoDB)
+            await Invoice.create({
+                invoiceNumber,
+                user: req.user.id,
+                subscription: subscription._id,
+                invoiceType: 'subscription',
+                amount: plan.price,
+                tax: 0,
+                totalAmount: plan.price,
+                items: [
+                    {
+                        description: `${plan.name} - ${plan.planType} (${plan.totalUnits} ${plan.planType === 'hourly' ? 'hours' : 'works'})`,
+                        quantity: 1,
+                        unitPrice: plan.price,
+                        total: plan.price,
+                    },
+                ],
+                paymentStatus: 'completed',
+                paymentMethod: 'Card',
+            });
+
+            console.log(`Invoice ${invoiceNumber} generated for subscription ${subscription._id}`);
+        } catch (invoiceError) {
+            // Log error but don't fail the subscription creation
+            console.error('Error generating subscription invoice:', invoiceError);
+        }
 
         res.status(201).json({
             success: true,

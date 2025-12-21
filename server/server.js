@@ -11,6 +11,7 @@ const maidScheduleRoutes = require('./routes/maidScheduleRoutes'); // Module 2 -
 const adminRoutes = require('./routes/adminRoutes'); // Module 2 - Admin Service Category Management
 const bookingRoutes = require('./routes/bookingRoutes'); // Module 2 - Booking & Conflict Handling
 const subscriptionRoutes = require('./routes/subscriptionRoutes'); // Module 3 - Subscription & Membership Plans (Member-1)
+const historyRoutes = require('./routes/historyRoutes'); // Module 3 - Service History & Invoice Generation (Member-2)
 // TODO: Import other routes as team members complete them
 // const profileRoutes = require('./routes/profileRoutes');
 // const serviceRoutes = require('./routes/serviceRoutes');
@@ -57,6 +58,7 @@ app.use('/api/maids/schedule', maidScheduleRoutes); // Module 2 - Maid Schedulin
 app.use('/api/admin', adminRoutes); // Module 2 - Admin Service Category Management
 app.use('/api/bookings', bookingRoutes); // Module 2 - Booking & Conflict Handling
 app.use('/api/subscriptions', subscriptionRoutes); // Module 3 - Subscription & Membership Plans (Member-1)
+app.use('/api/history', historyRoutes); // Module 3 - Service History & Invoice Generation (Member-2)
 // TODO: Add other routes as team members complete them
 // app.use('/api/profile', profileRoutes);
 // app.use('/api/services', serviceRoutes);
