@@ -261,7 +261,7 @@ const MaidApprovalAdmin = () => {
                                                 {maid.maidProfile.documents.map((doc, idx) => (
                                                     <a
                                                         key={idx}
-                                                        href={doc.url.startsWith('http') ? doc.url : `http://localhost:5000/${doc.url}`}
+                                                        href={doc.url.startsWith('http') ? doc.url : `http://localhost:8000/${doc.url}`}
                                                         target="_blank"
                                                         rel="noopener noreferrer"
                                                         className="px-3 py-1 bg-blue-500/20 text-blue-400 rounded-lg text-sm hover:bg-blue-500/30 transition-all"
