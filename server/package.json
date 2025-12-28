@@ -13,6 +13,7 @@
   "license": "ISC",
   "dependencies": {
     "@google/generative-ai": "^0.24.1",
+    "@googlemaps/google-maps-services-js": "^3.4.2",
     "@sendgrid/mail": "^8.1.0",
     "axios": "^1.13.2",
     "bcryptjs": "^2.4.3",

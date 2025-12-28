@@ -130,14 +130,17 @@ exports.initializeMaidProfile = async (req, res, next) => {
 };
 
 /**
- * @desc    Search and filter maids
+ * @desc    Search and filter maids with distance calculation
  * @route   GET /api/maids/search
  * @access  Public
  * @author  Member-4 (22101057)
+ * @updated Added comprehensive logging for debugging
  */
 exports.searchMaids = async (req, res, next) => {
     try {
         const { serviceType, rating, availableToday, sortBy = 'rating', customerLat, customerLng } = req.query;
+
+        console.log('🔍 Search Request Params:', { serviceType, rating, availableToday, sortBy, customerLat, customerLng });
 
         // Build query for maids
         let query = {
@@ -160,35 +163,49 @@ exports.searchMaids = async (req, res, next) => {
             query['maidProfile.isAvailableToday'] = true;
         }
 
+        console.log('📋 MongoDB Query:', JSON.stringify(query, null, 2));
+
         // Execute query
         let maids = await User.find(query).select('-password');
 
+        console.log(`✅ Found ${maids.length} maids from database`);
+
         // Format results
-        let maidsData = maids.map((maid) => ({
-            id: maid._id,
-            name: maid.name,
-            email: maid.email,
-            phone: maid.phone,
-            address: maid.address,
-            latitude: maid.address?.coordinates?.latitude,
-            longitude: maid.address?.coordinates?.longitude,
-            experience: maid.maidProfile?.experience || 0,
-            skills: maid.maidProfile?.skills || [],
-            serviceTypes: maid.maidProfile?.serviceTypes || [],
-            hourlyRate: maid.maidProfile?.hourlyRate || 0,
-            rating: maid.maidProfile?.rating || 0,
-            totalReviews: maid.maidProfile?.totalReviews || 0,
-            isAvailableToday: maid.maidProfile?.isAvailableToday || false,
-            verificationStatus: maid.maidProfile?.verificationStatus || 'unverified',
-            distance: null,
-        }));
+        let maidsData = maids.map((maid) => {
+            const maidData = {
+                id: maid._id,
+                name: maid.name,
+                email: maid.email,
+                phone: maid.phone,
+                address: maid.address,
+                latitude: maid.address?.coordinates?.latitude,
+                longitude: maid.address?.coordinates?.longitude,
+                experience: maid.maidProfile?.experience || 0,
+                skills: maid.maidProfile?.skills || [],
+                serviceTypes: maid.maidProfile?.serviceTypes || [],
+                hourlyRate: maid.maidProfile?.hourlyRate || 0,
+                rating: maid.maidProfile?.rating || 0,
+                totalReviews: maid.maidProfile?.totalReviews || 0,
+                isAvailableToday: maid.maidProfile?.isAvailableToday || false,
+                verificationStatus: maid.maidProfile?.verificationStatus || 'unverified',
+                distance: null,
+            };
+            
+            console.log(`📍 Maid: ${maid.name} - Coords: lat=${maidData.latitude}, lng=${maidData.longitude}`);
+            
+            return maidData;
+        });
 
         // Calculate distances if customer location provided
         if (customerLat && customerLng) {
+            console.log(`\n📏 Calculating distances from customer: ${customerLat}, ${customerLng}`);
+            
             const destinations = maidsData.map((maid) => ({
                 lat: maid.latitude,
                 lng: maid.longitude,
             }));
+
+            console.log('📍 Destinations array:', JSON.stringify(destinations, null, 2));
 
             const distances = await calculateDistancesBatch(
                 parseFloat(customerLat),
@@ -196,14 +213,24 @@ exports.searchMaids = async (req, res, next) => {
                 destinations
             );
 
+            console.log('📊 Distances returned:', distances);
+
             maidsData = maidsData.map((maid, index) => ({
                 ...maid,
                 distance: distances[index],
             }));
+
+            console.log('\n✅ Maids with distances:');
+            maidsData.forEach(m => {
+                console.log(`   ${m.name}: ${m.distance} km`);
+            });
+        } else {
+            console.log('\n⚠️  No customer location provided, skipping distance calculation');
         }
 
         // Sort results
         if (sortBy === 'distance' && customerLat && customerLng) {
+            console.log('\n🔄 Sorting by distance...');
             maidsData.sort((a, b) => {
                 if (a.distance === null) return 1;
                 if (b.distance === null) return -1;
@@ -217,12 +244,15 @@ exports.searchMaids = async (req, res, next) => {
             maidsData.sort((a, b) => b.rating - a.rating);
         }
 
+        console.log('\n✅ Search completed successfully\n');
+
         res.status(200).json({
             success: true,
             total: maidsData.length,
             maids: maidsData,
         });
     } catch (error) {
+        console.error('\n❌ Search error:', error);
         next(error);
     }
 };

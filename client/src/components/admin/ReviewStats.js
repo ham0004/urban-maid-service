@@ -51,10 +51,12 @@ const ReviewStats = () => {
     if (!stats) return null;
 
     // Prepare data for charts
-    const ratingData = stats.ratingDistribution.map(item => ({
-        rating: `${item._id} ⭐`,
-        count: item.count,
-    }));
+    const ratingData = Array.isArray(stats.ratingDistribution)
+        ? stats.ratingDistribution.map(item => ({
+            rating: `${item._id} ⭐`,
+            count: item.count,
+        }))
+        : [];
 
     const COLORS = ['#ef4444', '#f59e0b', '#eab308', '#84cc16', '#22c55e'];
 
