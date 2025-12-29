@@ -3,6 +3,8 @@ const cors = require('cors');
 const connectDB = require('./config/db');
 const config = require('./config/config');
 const errorHandler = require('./middleware/errorHandler');
+const http = require('http');
+const socketIo = require('socket.io');
 
 // Import routes
 const authRoutes = require('./routes/authRoutes');
@@ -18,7 +20,8 @@ const historyRoutes = require('./routes/historyRoutes'); // Module 3 - Service H
 // const serviceRoutes = require('./routes/serviceRoutes');
 const paymentRoutes = require('./routes/paymentRoutes');
 // const notificationRoutes = require('./routes/notificationRoutes');
-// const chatRoutes = require('./routes/chatRoutes');
+const chatRoutes = require('./routes/chatRoutes'); // Module 3 - Feature 7: In-app Chat Support (Member-4)
+const analyticsRoutes = require('./routes/analyticsRoutes'); // Module 3 - Feature 8: AI-Powered Analytics (Member-4)
 
 // Initialize Express app
 const app = express();
@@ -66,7 +69,8 @@ app.use('/api/history', historyRoutes); // Module 3 - Service History & Invoice 
 // app.use('/api/services', serviceRoutes);
 app.use('/api/payments', paymentRoutes);
 // app.use('/api/notifications', notificationRoutes);
-// app.use('/api/chat', chatRoutes);
+app.use('/api/chat', chatRoutes); // Module 3 - Feature 7: In-app Chat Support (Member-4)
+app.use('/api/analytics', analyticsRoutes); // Module 3 - Feature 8: AI-Powered Analytics (Member-4)
 
 // Serve uploads statically
 app.use('/uploads', express.static('uploads'));
@@ -84,12 +88,28 @@ app.use(errorHandler);
 
 // Start server
 const PORT = config.PORT;
-const server = app.listen(PORT, () => {
+const server = http.createServer(app);
+
+// Initialize Socket.io
+const io = socketIo(server, {
+  cors: {
+    origin: config.CLIENT_URL || 'http://localhost:3000',
+    methods: ['GET', 'POST'],
+    credentials: true
+  }
+});
+
+// Socket.io connection handling
+require('./socket/socketHandler')(io);
+
+server.listen(PORT, () => {
   console.log('='.repeat(50));
   console.log(`🚀 Server running in ${config.NODE_ENV} mode`);
   console.log(`📡 Listening on port ${PORT}`);
   console.log(`🌐 API URL: http://localhost:${PORT}/api`);
   console.log(`🏥 Health Check: http://localhost:${PORT}/api/health`);
+  console.log(`💬 Socket.io enabled for real-time chat`);
+  console.log(`🤖 AI Analytics powered by Google Gemini`);
   console.log('='.repeat(50));
 });
 

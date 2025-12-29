@@ -107,6 +107,15 @@ const MaidBookings = () => {
                                             {booking.status.charAt(0).toUpperCase() + booking.status.slice(1)}
                                         </span>
                                         <p className="text-2xl font-bold text-green-600 mt-2">৳{booking.totalPrice}</p>
+
+                                        {['accepted', 'completed'].includes(booking.status) && (
+                                            <button
+                                                onClick={() => navigate(`/chat/${booking._id}`)}
+                                                className="mt-2 px-3 py-1 bg-blue-100 text-blue-700 rounded-lg hover:bg-blue-200 text-sm font-medium flex items-center justify-end ml-auto"
+                                            >
+                                                <span className="mr-1">💬</span> Message Customer
+                                            </button>
+                                        )}
                                     </div>
                                 </div>
 

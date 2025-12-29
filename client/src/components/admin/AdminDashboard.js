@@ -242,6 +242,12 @@ const AdminDashboard = () => {
                             >
                                 👤 Maid Approval
                             </a>
+                            <a
+                                href="/admin/analytics"
+                                className="px-4 py-2 bg-purple-500/20 text-purple-400 rounded-lg hover:bg-purple-500/30 transition-all duration-200 border border-purple-500/30"
+                            >
+                                📊 Analytics
+                            </a>
                             <span className="text-slate-300 hidden sm:block">Welcome, {user?.name}!</span>
                             <button
                                 onClick={handleLogout}

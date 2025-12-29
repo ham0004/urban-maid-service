@@ -10,6 +10,14 @@ cloudinary.config({
     api_secret: process.env.CLOUDINARY_API_SECRET,
 });
 
+console.log('Cloudinary Config Check:', {
+    cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
+    api_key: process.env.CLOUDINARY_API_KEY ? `Exists (Len: ${process.env.CLOUDINARY_API_KEY.length}, Prefix: ${process.env.CLOUDINARY_API_KEY.substring(0, 3)})` : 'Missing',
+    api_secret: process.env.CLOUDINARY_API_SECRET ? 'Exists' : 'Missing',
+});
+
+console.log('Active Cloudinary Config:', cloudinary.config());
+
 // Cloudinary storage for maid documents
 const storage = new CloudinaryStorage({
     cloudinary: cloudinary,

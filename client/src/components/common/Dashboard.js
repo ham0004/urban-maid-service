@@ -1,10 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import api from '../../utils/api';
 
 const Dashboard = () => {
   const navigate = useNavigate();
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [unreadCount, setUnreadCount] = useState(0);
 
   useEffect(() => {
     // Get user data from localStorage
@@ -27,6 +29,28 @@ const Dashboard = () => {
 
     setLoading(false);
   }, [navigate]);
+
+  // Fetch unread message count
+  useEffect(() => {
+    const fetchUnreadCount = async () => {
+      try {
+        const response = await api.get('/chat/user/unread');
+        setUnreadCount(response.data.unreadCount || 0);
+      } catch (error) {
+        console.error('Error fetching unread count:', error);
+        setUnreadCount(0);
+      }
+    };
+
+    if (user) {
+      fetchUnreadCount();
+      
+      // Refresh count every 30 seconds
+      const interval = setInterval(fetchUnreadCount, 30000);
+      
+      return () => clearInterval(interval);
+    }
+  }, [user]);
 
   const handleLogout = () => {
     // Clear localStorage
@@ -141,8 +165,8 @@ const Dashboard = () => {
           </div>
         </div>
 
-        {/* Quick Actions */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+        {/* Quick Actions - Now 4 cards instead of 5 */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
           {/* Profile Card */}
           <div className="bg-white rounded-lg shadow-md p-6 hover:shadow-lg transition">
             <div className="text-4xl mb-3">👤</div>
@@ -196,6 +220,21 @@ const Dashboard = () => {
           </div>
         </div>
 
+        {/* Floating Chat Button - Bottom Right Corner */}
+        <button
+          onClick={() => navigate('/chat')}
+          className="fixed bottom-8 right-8 w-16 h-16 bg-gradient-to-r from-blue-500 to-indigo-600 text-white rounded-full shadow-2xl hover:shadow-3xl hover:scale-110 transition-all duration-300 flex items-center justify-center group z-50"
+          title={unreadCount > 0 ? `${unreadCount} unread messages` : 'Open Messages'}
+        >
+          <span className="text-3xl">💬</span>
+          {/* Real-time notification badge - only shows when there are unread messages */}
+          {unreadCount > 0 && (
+            <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs font-bold rounded-full min-w-[24px] h-6 px-1.5 flex items-center justify-center animate-pulse">
+              {unreadCount > 99 ? '99+' : unreadCount}
+            </span>
+          )}
+        </button>
+
         {/* Role-Specific Section */}
         {user.role === 'maid' && (
           <div className="mt-8 bg-blue-50 border-l-4 border-blue-500 p-6 rounded">
@@ -228,10 +267,16 @@ const Dashboard = () => {
             </p>
             <div className="space-x-3">
               <button
+                onClick={() => navigate('/search-maids')}
+                className="px-6 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition"
+              >
+                Find a Maid
+              </button>
+              <button
                 onClick={() => navigate('/bookings/new')}
                 className="px-6 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition"
               >
-                Book a Service
+                Book Directly
               </button>
               <button
                 onClick={() => navigate('/bookings/my')}
@@ -255,12 +300,20 @@ const Dashboard = () => {
             <p className="text-red-800 mb-4">
               As an admin, you can manage users, verify maids, and oversee platform activities.
             </p>
-            <button
-              onClick={() => navigate('/admin/dashboard')}
-              className="px-6 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition"
-            >
-              Admin Panel
-            </button>
+            <div className="space-x-3">
+              <button
+                onClick={() => navigate('/admin/dashboard')}
+                className="px-6 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition"
+              >
+                Admin Panel
+              </button>
+              <button
+                onClick={() => navigate('/admin/analytics')}
+                className="px-6 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition"
+              >
+                📊 Analytics Dashboard
+              </button>
+            </div>
           </div>
         )}
       </div>

@@ -48,7 +48,7 @@ const ServiceHistory = () => {
         try {
             // Fetch invoice HTML with authentication token
             const token = localStorage.getItem('token');
-            const response = await fetch(`http://localhost:5000/api/history/invoices/${invoiceId}/view`, {
+            const response = await fetch(`http://localhost:8000/history/invoices/${invoiceId}/view`, {
                 headers: {
                     'Authorization': `Bearer ${token}`
                 }

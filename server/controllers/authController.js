@@ -264,10 +264,11 @@ exports.getProfile = async (req, res, next) => {
 };
 
 /**
- * @desc    Update user profile
+ * @desc    Update user profile with automatic geocoding
  * @route   PUT /api/auth/profile
  * @access  Private
  * @author  Member-4 (22101057)
+ * @fixed   Saves coordinates to BOTH address.coordinates AND location (GeoJSON)
  */
 exports.updateProfile = async (req, res, next) => {
   try {
@@ -285,6 +286,7 @@ exports.updateProfile = async (req, res, next) => {
     // Update fields
     if (name) user.name = name;
     if (phone) user.phone = phone;
+    
     if (address) {
       // Use toObject() to get plain object if user.address exists, or empty object
       const currentAddress = user.address ? user.address.toObject() : {};
@@ -293,6 +295,34 @@ exports.updateProfile = async (req, res, next) => {
         ...currentAddress,
         ...address,
       };
+
+      // 🗺️ AUTOMATIC GEOCODING FOR ALL USERS
+      // Convert address to coordinates for distance calculation
+      if (address) {
+        console.log(`🗺️  Geocoding ${user.role} address...`);
+        
+        const { geocodeAddress } = require('../utils/geocoding');
+        const coordinates = await geocodeAddress(user.address);
+        
+        if (coordinates) {
+          // Save to BOTH locations for all users
+          // 1. Save to address.coordinates (for distance calculations)
+          user.address.coordinates = {
+            latitude: coordinates.latitude,
+            longitude: coordinates.longitude
+          };
+          
+          // 2. Also save to location (GeoJSON format for future geospatial queries)
+          user.location = {
+            type: 'Point',
+            coordinates: [coordinates.longitude, coordinates.latitude]
+          };
+          
+          console.log(`✅ Coordinates saved for ${user.role}:`, coordinates);
+        } else {
+          console.log('⚠️  Geocoding failed, coordinates not updated');
+        }
+      }
     }
 
     await user.save();
@@ -306,6 +336,13 @@ exports.updateProfile = async (req, res, next) => {
         email: user.email,
         phone: user.phone,
         address: user.address,
+        // Show coordinates for all users if they exist
+        ...(user.address?.coordinates ? {
+          coordinates: {
+            latitude: user.address.coordinates.latitude,
+            longitude: user.address.coordinates.longitude
+          }
+        } : {})
       },
     });
   } catch (error) {
