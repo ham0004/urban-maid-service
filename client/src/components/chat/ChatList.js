@@ -19,7 +19,7 @@ const ChatList = () => {
         const fetchChats = async () => {
             try {
                 const response = await axios.get(
-                    `${process.env.REACT_APP_API_URL || 'http://localhost:5000'}/chat/user/chats`,
+                    `${process.env.REACT_APP_API_URL || 'http://localhost:5000'}/api/chat/user/chats`,
                     {
                         headers: { Authorization: `Bearer ${token}` },
                     }
@@ -61,7 +61,7 @@ const ChatList = () => {
                 const fetchChats = async () => {
                     try {
                         const response = await axios.get(
-                            `${process.env.REACT_APP_API_URL || 'http://localhost:5000'}/chat/user/chats`,
+                            `${process.env.REACT_APP_API_URL || 'http://localhost:5000'}/api/chat/user/chats`,
                             {
                                 headers: { Authorization: `Bearer ${token}` },
                             }
