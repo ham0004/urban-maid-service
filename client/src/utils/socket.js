@@ -1,7 +1,7 @@
 import { io } from 'socket.io-client';
 
-const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:8000/api';
-// Socket needs to connect to the root URL (e.g., http://localhost:8000), not /api
+const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:5000/api';
+// Socket needs to connect to the root URL (e.g., http://localhost:5000), not /api
 const SOCKET_URL = API_URL.replace('/api', '');
 
 let socket = null;

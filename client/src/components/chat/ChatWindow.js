@@ -36,7 +36,7 @@ const ChatWindow = () => {
         const fetchChat = async () => {
             try {
                 const response = await axios.get(
-                    `${process.env.REACT_APP_API_URL || 'http://localhost:8000'}/chat/booking/${bookingId}`,
+                    `${process.env.REACT_APP_API_URL || 'http://localhost:5000'}/chat/booking/${bookingId}`,
                     {
                         headers: { Authorization: `Bearer ${token}` },
                     }
