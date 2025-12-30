@@ -8,6 +8,7 @@ const MaidSearch = () => {
     const [maids, setMaids] = useState([]);
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState('');
+    const [favoriteMaids, setFavoriteMaids] = useState([]);
 
     // Filters
     const [filters, setFilters] = useState({
@@ -44,6 +45,27 @@ const MaidSearch = () => {
                 }
             );
         }
+    }, []);
+
+    // Fetch user's favorite maids
+    useEffect(() => {
+        const fetchFavorites = async () => {
+            try {
+                const token = localStorage.getItem('token');
+                const user = JSON.parse(localStorage.getItem('user') || '{}');
+
+                // Only fetch favorites for customers
+                if (user.role === 'customer') {
+                    const response = await api.get('/favorites', {
+                        headers: { Authorization: `Bearer ${token}` },
+                    });
+                    setFavoriteMaids(response.data.data.map(m => m.id));
+                }
+            } catch (err) {
+                console.error('Failed to fetch favorites:', err);
+            }
+        };
+        fetchFavorites();
     }, []);
 
     const fetchMaids = useCallback(async () => {
@@ -91,6 +113,30 @@ const MaidSearch = () => {
 
     const handleBook = (maidId) => {
         navigate(`/bookings/new?maidId=${maidId}`);
+    };
+
+    const handleToggleFavorite = async (maidId) => {
+        try {
+            const token = localStorage.getItem('token');
+            const isFavorite = favoriteMaids.includes(maidId);
+
+            if (isFavorite) {
+                // Remove from favorites
+                await api.delete(`/favorites/${maidId}`, {
+                    headers: { Authorization: `Bearer ${token}` },
+                });
+                setFavoriteMaids(favoriteMaids.filter(id => id !== maidId));
+            } else {
+                // Add to favorites
+                await api.post(`/favorites/${maidId}`, {}, {
+                    headers: { Authorization: `Bearer ${token}` },
+                });
+                setFavoriteMaids([...favoriteMaids, maidId]);
+            }
+        } catch (err) {
+            console.error('Failed to toggle favorite:', err);
+            setError(err.response?.data?.message || 'Failed to update favorites');
+        }
     };
 
     return (
@@ -212,6 +258,8 @@ const MaidSearch = () => {
                                                 key={maid.id}
                                                 maid={maid}
                                                 onBook={handleBook}
+                                                isFavorite={favoriteMaids.includes(maid.id)}
+                                                onToggleFavorite={handleToggleFavorite}
                                             />
                                         ))}
                                     </div>

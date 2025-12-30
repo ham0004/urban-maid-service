@@ -48,7 +48,7 @@ const ServiceHistory = () => {
         try {
             // Fetch invoice HTML with authentication token
             const token = localStorage.getItem('token');
-            const response = await fetch(`http://localhost:5000/history/invoices/${invoiceId}/view`, {
+            const response = await fetch(`http://localhost:5000/api/history/invoices/${invoiceId}/view`, {
                 headers: {
                     'Authorization': `Bearer ${token}`
                 }
@@ -65,6 +65,11 @@ const ServiceHistory = () => {
             const newWindow = window.open('', '_blank');
             newWindow.document.write(html);
             newWindow.document.close();
+
+            // Trigger print dialog after content loads (user can save as PDF)
+            newWindow.onload = () => {
+                newWindow.print();
+            };
         } catch (err) {
             setError('Failed to load invoice. Please try again.');
             console.error('Invoice load error:', err);

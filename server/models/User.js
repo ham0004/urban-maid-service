@@ -70,6 +70,13 @@ const userSchema = new mongoose.Schema(
       type: Boolean,
       default: true,
     },
+    // Favorite Maids (for customers)
+    favoriteMaids: [
+      {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'User',
+      },
+    ],
     // Maid Profile Fields
     maidProfile: {
       experience: {

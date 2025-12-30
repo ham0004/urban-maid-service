@@ -44,10 +44,10 @@ const Dashboard = () => {
 
     if (user) {
       fetchUnreadCount();
-      
+
       // Refresh count every 30 seconds
       const interval = setInterval(fetchUnreadCount, 30000);
-      
+
       return () => clearInterval(interval);
     }
   }, [user]);
@@ -283,6 +283,12 @@ const Dashboard = () => {
                 className="px-6 py-2 bg-green-100 text-green-700 rounded-lg hover:bg-green-200 transition"
               >
                 View My Bookings
+              </button>
+              <button
+                onClick={() => navigate('/favorites')}
+                className="px-6 py-2 bg-pink-100 text-pink-700 rounded-lg hover:bg-pink-200 transition"
+              >
+                ⭐ My Favorite Maids
               </button>
               <button
                 onClick={() => navigate('/history')}

@@ -22,6 +22,7 @@ const paymentRoutes = require('./routes/paymentRoutes');
 // const notificationRoutes = require('./routes/notificationRoutes');
 const chatRoutes = require('./routes/chatRoutes'); // Module 3 - Feature 7: In-app Chat Support (Member-4)
 const analyticsRoutes = require('./routes/analyticsRoutes'); // Module 3 - Feature 8: AI-Powered Analytics (Member-4)
+const favoriteRoutes = require('./routes/favoriteRoutes'); // Favorite Maids Feature
 
 // Initialize Express app
 const app = express();
@@ -71,6 +72,7 @@ app.use('/api/payments', paymentRoutes);
 // app.use('/api/notifications', notificationRoutes);
 app.use('/api/chat', chatRoutes); // Module 3 - Feature 7: In-app Chat Support (Member-4)
 app.use('/api/analytics', analyticsRoutes); // Module 3 - Feature 8: AI-Powered Analytics (Member-4)
+app.use('/api/favorites', favoriteRoutes); // Favorite Maids Feature
 
 // Serve uploads statically
 app.use('/uploads', express.static('uploads'));

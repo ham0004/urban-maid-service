@@ -29,6 +29,7 @@ import MaidBookings from './components/booking/MaidBookings';
 // Member-4 Components (Search & Filter)
 import MaidSearch from './components/maid/MaidSearch';
 import MaidProfileSetup from './components/maid/MaidProfileSetup';
+import FavoriteMaids from './components/maid/FavoriteMaids';
 
 // Module 3 Feature 1: Subscription Routes (Member-1)
 import SubscriptionPlans from './components/subscription/SubscriptionPlans';
@@ -113,6 +114,7 @@ function App() {
             {/* Member-4 Routes (Search & Profile Setup) */}
             <Route path="/search-maids" element={<MaidSearch />} />
             <Route path="/maid/profile-setup" element={<MaidProfileSetup />} />
+            <Route path="/favorites" element={<FavoriteMaids />} />
 
             {/* Module 3 Feature 1: Subscription Routes (Member-1) */}
             <Route path="/subscription-plans" element={<SubscriptionPlans />} />
