@@ -10,6 +10,8 @@ const BookingForm = () => {
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState('');
     const [success, setSuccess] = useState('');
+    const [weather, setWeather] = useState(null);
+    const [weatherLoading, setWeatherLoading] = useState(false);
 
     const [formData, setFormData] = useState({
         maidId: '',
@@ -55,6 +57,30 @@ const BookingForm = () => {
         };
         fetchSlots();
     }, [formData.maidId, formData.scheduledDate]);
+
+    // Fetch weather when city and date are selected
+    useEffect(() => {
+        const fetchWeather = async () => {
+            if (formData.address.city && formData.scheduledDate) {
+                setWeatherLoading(true);
+                try {
+                    const res = await api.get(`/weather/forecast?city=${formData.address.city}&date=${formData.scheduledDate}`);
+                    setWeather(res.data.data);
+                } catch (err) {
+                    console.error('Failed to fetch weather:', err);
+                    setWeather(null);
+                } finally {
+                    setWeatherLoading(false);
+                }
+            }
+        };
+
+        const timeoutId = setTimeout(() => {
+            fetchWeather();
+        }, 1000); // Debounce weather fetch 
+
+        return () => clearTimeout(timeoutId);
+    }, [formData.address.city, formData.scheduledDate]);
 
     const handleChange = (e) => {
         const { name, value } = e.target;
@@ -159,6 +185,32 @@ const BookingForm = () => {
                                 className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500"
                             />
                         </div>
+
+                        {/* Weather Information Display */}
+                        {weather && (
+                            <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 transition-all duration-300">
+                                <h4 className="font-semibold text-blue-900 mb-2 flex items-center">
+                                    <span className="mr-2">🌤️</span> Weather Forecast for {weather.location.name}
+                                </h4>
+                                <div className="grid grid-cols-2 gap-4 text-sm">
+                                    <div className="flex flex-col">
+                                        <span className="text-gray-500">Condition</span>
+                                        <span className="font-medium text-gray-900">{weather.weather.condition}</span>
+                                    </div>
+                                    <div className="flex flex-col">
+                                        <span className="text-gray-500">Temperature</span>
+                                        <span className="font-medium text-gray-900">{weather.weather.maxTemp}°C / {weather.weather.minTemp}°C</span>
+                                    </div>
+                                    <div className="flex flex-col">
+                                        <span className="text-gray-500">Precipitation</span>
+                                        <span className="font-medium text-gray-900">{weather.weather.precipitation} mm</span>
+                                    </div>
+                                </div>
+                            </div>
+                        )}
+                        {weatherLoading && (
+                            <div className="text-sm text-gray-500 italic">Checking weather forecast...</div>
+                        )}
 
                         {/* Time Slot */}
                         <div>
