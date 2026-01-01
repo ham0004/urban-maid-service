@@ -13,6 +13,9 @@ const BookingForm = () => {
     const [weather, setWeather] = useState(null);
     const [weatherLoading, setWeatherLoading] = useState(false);
 
+    // Member-1: Subscription state
+    const [subscription, setSubscription] = useState(null);
+
     const [formData, setFormData] = useState({
         maidId: '',
         serviceCategoryId: '',
@@ -26,7 +29,7 @@ const BookingForm = () => {
         notes: '',
     });
 
-    // Fetch verified maids and service categories
+    // Fetch verified maids, service categories, and check subscription
     useEffect(() => {
         const fetchData = async () => {
             try {
@@ -36,6 +39,16 @@ const BookingForm = () => {
                 ]);
                 setMaids(maidsRes.data.data);
                 setCategories(categoriesRes.data.data);
+
+                // Check for active subscription
+                try {
+                    const subRes = await api.get('/bookings/check-subscription');
+                    if (subRes.data.hasSubscription) {
+                        setSubscription(subRes.data.data);
+                    }
+                } catch (subErr) {
+                    // User might not have subscription or not logged in
+                }
             } catch (err) {
                 setError('Failed to load data');
             }
@@ -132,6 +145,65 @@ const BookingForm = () => {
                             {success}
                         </div>
                     )}
+
+                    {/* Member-1: Subscription Status Banner */}
+                    {subscription && (() => {
+                        // Check if selected date is within subscription validity
+                        const selectedDate = formData.scheduledDate ? new Date(formData.scheduledDate) : null;
+                        const endDate = new Date(subscription.endDate);
+                        const isDateBeyondValidity = selectedDate && selectedDate > endDate;
+
+                        return (
+                            <div className={`border rounded-lg p-4 mb-6 ${isDateBeyondValidity ? 'bg-amber-50 border-amber-200' : 'bg-emerald-50 border-emerald-200'}`}>
+                                <div className="flex items-center justify-between">
+                                    <div>
+                                        <h4 className={`font-semibold flex items-center ${isDateBeyondValidity ? 'text-amber-800' : 'text-emerald-800'}`}>
+                                            <span className="mr-2">{isDateBeyondValidity ? '⚠️' : '🎫'}</span>
+                                            {isDateBeyondValidity ? 'SUBSCRIPTION NOT APPLICABLE' : 'SUBSCRIPTION ACTIVE'}
+                                        </h4>
+                                        <p className={`text-sm mt-1 ${isDateBeyondValidity ? 'text-amber-700' : 'text-emerald-700'}`}>
+                                            <span className="font-medium">{subscription.planName}</span>
+                                            <span className="mx-2">•</span>
+                                            {subscription.remainingUnits} {subscription.planType === 'hours' ? 'hours' : 'works'} remaining
+                                            <span className="mx-2">•</span>
+                                            <span className="text-xs">Valid until: {new Date(subscription.endDate).toLocaleDateString()}</span>
+                                        </p>
+                                    </div>
+                                    <div className="text-right">
+                                        <span className={`inline-block px-3 py-1 text-xs font-medium rounded-full ${isDateBeyondValidity ? 'bg-amber-200 text-amber-800' : 'bg-emerald-200 text-emerald-800'}`}>
+                                            {subscription.planType === 'hours' ? '⏱️ Hour-based' : '📋 Work-based'}
+                                        </span>
+                                    </div>
+                                </div>
+
+                                {isDateBeyondValidity ? (
+                                    <div className="mt-3 pt-3 border-t border-amber-200">
+                                        <p className="text-amber-800 text-sm">
+                                            ⚠️ <strong>Selected date ({new Date(formData.scheduledDate).toLocaleDateString()}) is beyond your subscription validity.</strong>
+                                        </p>
+                                        <p className="text-amber-700 text-sm mt-1">
+                                            This booking will be a <strong>regular booking</strong> with standard pricing. Your subscription will NOT be used.
+                                        </p>
+                                    </div>
+                                ) : formData.duration && (
+                                    <div className="mt-3 pt-3 border-t border-emerald-200 grid grid-cols-2 gap-4 text-sm">
+                                        <div>
+                                            <span className="text-emerald-600">This booking:</span>
+                                            <span className="font-medium text-emerald-800 ml-2">
+                                                {subscription.planType === 'hours' ? Math.ceil(formData.duration / 60) : 1} {subscription.planType}
+                                            </span>
+                                        </div>
+                                        <div>
+                                            <span className="text-emerald-600">Maid will receive:</span>
+                                            <span className="font-bold text-emerald-800 ml-2">
+                                                ৳{subscription.pricePerUnit * (subscription.planType === 'hours' ? Math.ceil(formData.duration / 60) : 1)}
+                                            </span>
+                                        </div>
+                                    </div>
+                                )}
+                            </div>
+                        );
+                    })()}
 
                     <form onSubmit={handleSubmit} className="space-y-6">
                         {/* Select Maid */}

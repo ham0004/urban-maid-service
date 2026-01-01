@@ -66,6 +66,43 @@ const bookingSchema = new mongoose.Schema(
         completedAt: {
             type: Date,
         },
+        // ========================================
+        // MEMBER-1: Subscription Payment Tracking
+        // ========================================
+        subscriptionPayment: {
+            isSubscriptionBooking: {
+                type: Boolean,
+                default: false,
+            },
+            subscription: {
+                type: mongoose.Schema.Types.ObjectId,
+                ref: 'UserSubscription',
+            },
+            planType: {
+                type: String,
+                enum: ['hours', 'works', null],
+                default: null,
+            },
+            unitsDeducted: {
+                type: Number,
+                default: 0,
+            },
+            maidPaymentAmount: {
+                type: Number,
+                default: 0,
+            },
+            maidPaymentConfirmed: {
+                type: Boolean,
+                default: null, // null = pending confirmation, true = paid, false = not paid
+            },
+            paymentConfirmedAt: {
+                type: Date,
+            },
+            adminNotified: {
+                type: Boolean,
+                default: false,
+            },
+        },
     },
     {
         timestamps: true,
