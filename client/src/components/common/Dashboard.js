@@ -260,51 +260,45 @@ const Dashboard = () => {
         )}
 
         {user.role === 'customer' && (
-          <div className="mt-8 bg-green-50 border-l-4 border-green-500 p-6 rounded">
+          <div className="mt-8 bg-gradient-to-r from-green-50 to-emerald-50 border-l-4 border-green-500 p-6 rounded-xl shadow-sm">
             <h3 className="text-xl font-bold text-green-900 mb-2">📅 Customer Dashboard</h3>
             <p className="text-green-800 mb-4">
               As a customer, you can book services, manage your bookings, and rate service providers.
             </p>
-            <div className="space-x-3">
+            <div className="flex flex-wrap gap-3">
               <button
                 onClick={() => navigate('/search-maids')}
-                className="px-6 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition"
+                className="px-6 py-2.5 bg-gradient-to-r from-indigo-500 to-purple-600 text-white rounded-xl hover:from-indigo-600 hover:to-purple-700 transition-all shadow-md hover:shadow-lg font-medium"
               >
-                Find a Maid
+                🔍 Find a Maid
               </button>
               <button
                 onClick={() => navigate('/bookings/new')}
-                className="px-6 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition"
+                className="px-6 py-2.5 bg-gradient-to-r from-green-500 to-emerald-600 text-white rounded-xl hover:from-green-600 hover:to-emerald-700 transition-all shadow-md hover:shadow-lg font-medium"
               >
-                Book Directly
+                ➕ Book Directly
               </button>
               <button
                 onClick={() => navigate('/bookings/my')}
-                className="px-6 py-2 bg-green-100 text-green-700 rounded-lg hover:bg-green-200 transition"
+                className="px-6 py-2.5 bg-gradient-to-r from-blue-500 to-cyan-600 text-white rounded-xl hover:from-blue-600 hover:to-cyan-700 transition-all shadow-md hover:shadow-lg font-medium"
               >
-                View My Bookings
+                📋 My Bookings
               </button>
               <button
                 onClick={() => navigate('/favorites')}
-                className="px-6 py-2 bg-pink-100 text-pink-700 rounded-lg hover:bg-pink-200 transition"
+                className="px-6 py-2.5 bg-gradient-to-r from-pink-500 to-rose-600 text-white rounded-xl hover:from-pink-600 hover:to-rose-700 transition-all shadow-md hover:shadow-lg font-medium"
               >
-                ⭐ My Favorite Maids
-              </button>
-              <button
-                onClick={() => navigate('/history')}
-                className="px-6 py-2 bg-purple-100 text-purple-700 rounded-lg hover:bg-purple-200 transition"
-              >
-                View History
+                ⭐ Favorites
               </button>
               <button
                 onClick={() => navigate('/subscription-plans')}
-                className="px-6 py-2 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 transition"
+                className="px-6 py-2.5 bg-gradient-to-r from-amber-500 to-orange-600 text-white rounded-xl hover:from-amber-600 hover:to-orange-700 transition-all shadow-md hover:shadow-lg font-medium"
               >
                 📦 Subscription Plans
               </button>
               <button
                 onClick={() => navigate('/my-subscription')}
-                className="px-6 py-2 bg-teal-100 text-teal-700 rounded-lg hover:bg-teal-200 transition"
+                className="px-6 py-2.5 bg-gradient-to-r from-teal-500 to-cyan-600 text-white rounded-xl hover:from-teal-600 hover:to-cyan-700 transition-all shadow-md hover:shadow-lg font-medium"
               >
                 💳 My Subscription
               </button>
