@@ -20,6 +20,7 @@ import BlockSlot from './components/maid/BlockSlot';
 // Admin Components (Module 2 & Module 3)
 import AdminDashboard from './components/admin/AdminDashboard';
 import MaidApprovalAdmin from './components/admin/MaidApprovalAdmin';
+import PaymentDisputesAdmin from './components/admin/PaymentDisputesAdmin';
 
 // Booking Components (Module 2 Feature 2)
 import BookingForm from './components/booking/BookingForm';
@@ -96,6 +97,7 @@ function App() {
             {/* Admin Routes (Module 2 & 3) */}
             <Route path="/admin/dashboard" element={<AdminDashboard />} />
             <Route path="/admin/maid-approval" element={<MaidApprovalAdmin />} />
+            <Route path="/admin/payment-disputes" element={<PaymentDisputesAdmin />} />
 
             {/* Booking Routes (Module 2 Feature 2) */}
             <Route path="/bookings/new" element={<BookingForm />} />

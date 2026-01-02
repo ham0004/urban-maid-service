@@ -1,6 +1,7 @@
 const Booking = require('../models/Booking');
 const User = require('../models/User');
 const ServiceCategory = require('../models/ServiceCategory');
+const UserSubscription = require('../models/UserSubscription');
 const { deductFromSubscription } = require('./subscriptionController'); // Module 3 Feature 1
 
 /**
@@ -8,6 +9,7 @@ const { deductFromSubscription } = require('./subscriptionController'); // Modul
  * @route   POST /api/bookings
  * @access  Private (Customer)
  * @author  Member-2 (Module 2 - Booking & Conflict Handling)
+ * @modified Member-1 (Added subscription payment tracking)
  */
 exports.createBooking = async (req, res, next) => {
     try {
@@ -59,6 +61,64 @@ exports.createBooking = async (req, res, next) => {
         const pricing = serviceCategory.pricing.find(p => p.duration === duration);
         const totalPrice = pricing ? pricing.price : serviceCategory.pricing[0]?.price || 0;
 
+        // ========================================
+        // MEMBER-1: Check for active subscription
+        // ========================================
+        let subscriptionPaymentData = {
+            isSubscriptionBooking: false,
+            subscription: null,
+            planType: null,
+            unitsDeducted: 0,
+            maidPaymentAmount: 0,
+            maidPaymentConfirmed: null,
+            adminNotified: false,
+        };
+
+        const activeSubscription = await UserSubscription.findOne({
+            customer: req.user.id,
+            status: 'active',
+            paymentStatus: 'paid',
+            remainingUnits: { $gt: 0 },
+            endDate: { $gt: new Date() },
+        }).populate('plan');
+
+        if (activeSubscription && activeSubscription.plan) {
+            const plan = activeSubscription.plan;
+            const hoursBooked = Math.ceil(duration / 60);
+
+            // Check if scheduled date is within subscription validity
+            const bookingDate = new Date(scheduledDate);
+            const subscriptionEndDate = new Date(activeSubscription.endDate);
+            const isDateWithinValidity = bookingDate <= subscriptionEndDate;
+
+            // Only apply subscription if date is within validity
+            if (isDateWithinValidity) {
+                // Calculate units to deduct
+                let unitsToDeduct = 1; // Default for work-based
+                if (plan.planType === 'hours') {
+                    unitsToDeduct = hoursBooked;
+                }
+
+                // Check if subscription has enough balance
+                if (activeSubscription.remainingUnits >= unitsToDeduct) {
+                    // Calculate maid payment amount
+                    const pricePerUnit = plan.price / plan.totalUnits;
+                    const maidPayment = Math.round(pricePerUnit * unitsToDeduct);
+
+                    subscriptionPaymentData = {
+                        isSubscriptionBooking: true,
+                        subscription: activeSubscription._id,
+                        planType: plan.planType,
+                        unitsDeducted: unitsToDeduct,
+                        maidPaymentAmount: maidPayment,
+                        maidPaymentConfirmed: null, // Will be confirmed by maid
+                        adminNotified: false,
+                    };
+                }
+            }
+            // If date is beyond validity, subscriptionPaymentData stays as default (regular booking)
+        }
+
         // Create booking
         const booking = await Booking.create({
             customer: req.user.id,
@@ -67,10 +127,11 @@ exports.createBooking = async (req, res, next) => {
             scheduledDate,
             scheduledTime,
             duration,
-            totalPrice,
+            totalPrice: subscriptionPaymentData.isSubscriptionBooking ? 0 : totalPrice, // ৳0 for subscription
             address,
             notes,
             status: 'pending',
+            subscriptionPayment: subscriptionPaymentData,
         });
 
         // Populate references for response
@@ -81,8 +142,16 @@ exports.createBooking = async (req, res, next) => {
 
         res.status(201).json({
             success: true,
-            message: 'Booking created successfully',
+            message: subscriptionPaymentData.isSubscriptionBooking
+                ? `Booking created using subscription! Maid will receive ৳${subscriptionPaymentData.maidPaymentAmount}`
+                : 'Booking created successfully',
             data: booking,
+            subscription: subscriptionPaymentData.isSubscriptionBooking ? {
+                planType: subscriptionPaymentData.planType,
+                unitsToDeduct: subscriptionPaymentData.unitsDeducted,
+                maidPayment: subscriptionPaymentData.maidPaymentAmount,
+                remainingAfter: activeSubscription.remainingUnits - subscriptionPaymentData.unitsDeducted,
+            } : null,
         });
     } catch (error) {
         next(error);
@@ -194,15 +263,17 @@ exports.updateBookingStatus = async (req, res, next) => {
         if (status === 'completed') {
             booking.completedAt = new Date();
 
-            // Module 3 Feature 1: Deduct from customer's subscription if active
-            try {
-                const unitsToDeduct = booking.duration ? Math.ceil(booking.duration / 60) : 1;
-                const subscription = await deductFromSubscription(booking.customer, booking._id, 1);
-                if (subscription) {
-                    console.log(`✅ Deducted 1 work from subscription for customer ${booking.customer}`);
+            // Module 3 Feature 1: Deduct from customer's subscription if it's a subscription booking
+            if (booking.subscriptionPayment?.isSubscriptionBooking) {
+                try {
+                    const unitsToDeduct = booking.subscriptionPayment.unitsDeducted || 1;
+                    const subscription = await deductFromSubscription(booking.customer, booking._id, unitsToDeduct);
+                    if (subscription) {
+                        console.log(`✅ Deducted ${unitsToDeduct} ${booking.subscriptionPayment.planType} from subscription for customer ${booking.customer}`);
+                    }
+                } catch (subError) {
+                    console.log('Subscription deduction error:', subError.message);
                 }
-            } catch (subError) {
-                console.log('No active subscription or deduction not needed:', subError.message);
             }
         }
 
@@ -331,6 +402,235 @@ exports.getVerifiedMaids = async (req, res, next) => {
             success: true,
             count: maids.length,
             data: maids,
+        });
+    } catch (error) {
+        next(error);
+    }
+};
+
+// ========================================
+// MEMBER-1: Subscription Payment Endpoints
+// ========================================
+
+/**
+ * @desc    Maid confirms payment received for subscription booking
+ * @route   PUT /api/bookings/:id/confirm-payment
+ * @access  Private (Maid only)
+ * @author  Member-1 (Module 3 - Subscription Payment)
+ */
+exports.confirmMaidPayment = async (req, res, next) => {
+    try {
+        const { isPaid } = req.body;
+        const bookingId = req.params.id;
+
+        const booking = await Booking.findById(bookingId);
+        if (!booking) {
+            return res.status(404).json({
+                success: false,
+                message: 'Booking not found',
+            });
+        }
+
+        // Only maid can confirm
+        if (booking.maid.toString() !== req.user.id.toString()) {
+            return res.status(403).json({
+                success: false,
+                message: 'Only the assigned maid can confirm payment',
+            });
+        }
+
+        // Only for subscription bookings
+        if (!booking.subscriptionPayment?.isSubscriptionBooking) {
+            return res.status(400).json({
+                success: false,
+                message: 'This is not a subscription booking',
+            });
+        }
+
+        // Update payment confirmation
+        booking.subscriptionPayment.maidPaymentConfirmed = isPaid;
+        booking.subscriptionPayment.paymentConfirmedAt = new Date();
+
+        if (!isPaid) {
+            // Set dispute details
+            booking.subscriptionPayment.adminNotified = true;
+            booking.subscriptionPayment.disputeReportedAt = new Date();
+
+            // Set 24-hour deadline
+            const deadline = new Date();
+            deadline.setHours(deadline.getHours() + 24);
+            booking.subscriptionPayment.disputeDeadline = deadline;
+
+            console.log(`⚠️ ADMIN NOTIFICATION: Maid reported unpaid for booking ${bookingId}. Deadline: ${deadline}`);
+        }
+
+        await booking.save();
+
+        await booking.populate([
+            { path: 'customer', select: 'name email phone' },
+            { path: 'maid', select: 'name email phone' },
+            { path: 'serviceCategory', select: 'name icon' },
+        ]);
+
+        res.status(200).json({
+            success: true,
+            message: isPaid
+                ? 'Payment confirmed. Thank you!'
+                : 'Admin has been notified. Please visit our service center within 24 hours to resolve this issue.',
+            data: booking,
+            showServiceCenterNotice: !isPaid, // Flag for frontend to show the popup
+            deadline: !isPaid ? booking.subscriptionPayment.disputeDeadline : null,
+        });
+    } catch (error) {
+        next(error);
+    }
+};
+
+/**
+ * @desc    Get unpaid subscription bookings (Admin only)
+ * @route   GET /api/bookings/admin/unpaid
+ * @access  Private (Admin only)
+ * @author  Member-1 (Module 3 - Subscription Payment)
+ */
+exports.getUnpaidBookings = async (req, res, next) => {
+    try {
+        const bookings = await Booking.find({
+            'subscriptionPayment.isSubscriptionBooking': true,
+            'subscriptionPayment.maidPaymentConfirmed': false,
+            'subscriptionPayment.adminNotified': true,
+        })
+            .populate('customer', 'name email phone')
+            .populate('maid', 'name email phone')
+            .populate('serviceCategory', 'name icon')
+            .sort({ createdAt: -1 });
+
+        res.status(200).json({
+            success: true,
+            count: bookings.length,
+            data: bookings,
+        });
+    } catch (error) {
+        next(error);
+    }
+};
+
+/**
+ * @desc    Maid acknowledges the 24-hour service center notice
+ * @route   PUT /api/bookings/:id/acknowledge-dispute
+ * @access  Private (Maid only)
+ * @author  Member-1 (Module 3 - Payment Dispute)
+ */
+exports.acknowledgeMaidDispute = async (req, res, next) => {
+    try {
+        const bookingId = req.params.id;
+
+        const booking = await Booking.findById(bookingId);
+        if (!booking) {
+            return res.status(404).json({
+                success: false,
+                message: 'Booking not found',
+            });
+        }
+
+        // Only maid can acknowledge
+        if (booking.maid.toString() !== req.user.id.toString()) {
+            return res.status(403).json({
+                success: false,
+                message: 'Only the assigned maid can acknowledge',
+            });
+        }
+
+        // Set acknowledged
+        booking.subscriptionPayment.maidAcknowledged = true;
+        await booking.save();
+
+        res.status(200).json({
+            success: true,
+            message: 'Thank you for acknowledging. Please visit our service center within 24 hours.',
+            deadline: booking.subscriptionPayment.disputeDeadline,
+        });
+    } catch (error) {
+        next(error);
+    }
+};
+
+/**
+ * @desc    Resend payment notification (Admin only - Mock)
+ * @route   POST /api/bookings/admin/resend-payment/:id
+ * @access  Private (Admin only)
+ * @author  Member-1 (Module 3 - Subscription Payment)
+ */
+exports.resendPaymentNotification = async (req, res, next) => {
+    try {
+        const booking = await Booking.findById(req.params.id)
+            .populate('customer', 'name email')
+            .populate('maid', 'name email');
+
+        if (!booking) {
+            return res.status(404).json({
+                success: false,
+                message: 'Booking not found',
+            });
+        }
+
+        // Mock: Just log the notification
+        console.log('====================================');
+        console.log('📧 PAYMENT REMINDER SENT (MOCK)');
+        console.log(`To Customer: ${booking.customer.name} (${booking.customer.email})`);
+        console.log(`For Maid: ${booking.maid.name}`);
+        console.log(`Amount: ৳${booking.subscriptionPayment.maidPaymentAmount}`);
+        console.log(`Booking ID: ${booking._id}`);
+        console.log('====================================');
+
+        res.status(200).json({
+            success: true,
+            message: `Payment reminder sent to ${booking.customer.email} (Mock)`,
+            data: {
+                customer: booking.customer.name,
+                maid: booking.maid.name,
+                amount: booking.subscriptionPayment.maidPaymentAmount,
+            },
+        });
+    } catch (error) {
+        next(error);
+    }
+};
+
+/**
+ * @desc    Check customer's active subscription for booking form
+ * @route   GET /api/bookings/check-subscription
+ * @access  Private (Customer)
+ * @author  Member-1 (Module 3 - Subscription Payment)
+ */
+exports.checkCustomerSubscription = async (req, res, next) => {
+    try {
+        const subscription = await UserSubscription.findOne({
+            customer: req.user.id,
+            status: 'active',
+            paymentStatus: 'paid',
+            remainingUnits: { $gt: 0 },
+            endDate: { $gt: new Date() },
+        }).populate('plan');
+
+        if (!subscription) {
+            return res.status(200).json({
+                success: true,
+                hasSubscription: false,
+                data: null,
+            });
+        }
+
+        res.status(200).json({
+            success: true,
+            hasSubscription: true,
+            data: {
+                planName: subscription.plan.name,
+                planType: subscription.plan.planType,
+                remainingUnits: subscription.remainingUnits,
+                totalUnits: subscription.plan.totalUnits,
+                pricePerUnit: Math.round(subscription.plan.price / subscription.plan.totalUnits),
+                endDate: subscription.endDate,
+            },
         });
     } catch (error) {
         next(error);

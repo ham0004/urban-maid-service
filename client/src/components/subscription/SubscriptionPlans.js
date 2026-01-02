@@ -16,6 +16,10 @@ const SubscriptionPlans = () => {
     const [error, setError] = useState('');
     const [success, setSuccess] = useState('');
 
+    // Payment confirmation modal state
+    const [selectedPlan, setSelectedPlan] = useState(null);
+    const [showPaymentModal, setShowPaymentModal] = useState(false);
+
     useEffect(() => {
         const fetchData = async () => {
             try {
@@ -46,25 +50,41 @@ const SubscriptionPlans = () => {
         fetchData();
     }, []);
 
-    const handleSubscribe = async (planId) => {
+    // Open payment confirmation modal
+    const handleSelectPlan = (plan) => {
         const token = localStorage.getItem('token');
         if (!token) {
             navigate('/login');
             return;
         }
+        setSelectedPlan(plan);
+        setShowPaymentModal(true);
+    };
+
+    // Confirm payment and subscribe
+    const handleConfirmPayment = async () => {
+        if (!selectedPlan) return;
 
         try {
-            setSubscribing(planId);
+            setSubscribing(selectedPlan._id);
             setError('');
-            const response = await api.post(`/subscriptions/subscribe/${planId}`);
-            setSuccess('Successfully subscribed! 🎉');
+            const response = await api.post(`/subscriptions/subscribe/${selectedPlan._id}`);
+            setSuccess('Payment successful! Subscription activated 🎉');
             setCurrentSubscription(response.data.data);
+            setShowPaymentModal(false);
+            setSelectedPlan(null);
             setTimeout(() => setSuccess(''), 5000);
         } catch (err) {
             setError(err.message || 'Failed to subscribe');
         } finally {
             setSubscribing(null);
         }
+    };
+
+    // Close modal
+    const handleCloseModal = () => {
+        setShowPaymentModal(false);
+        setSelectedPlan(null);
     };
 
     if (loading) {
@@ -151,8 +171,8 @@ const SubscriptionPlans = () => {
 
                                 <div className="text-center mb-6">
                                     <span className={`inline-block px-3 py-1 text-xs rounded-full mb-3 ${plan.planType === 'hours'
-                                            ? 'bg-blue-500/20 text-blue-400'
-                                            : 'bg-purple-500/20 text-purple-400'
+                                        ? 'bg-blue-500/20 text-blue-400'
+                                        : 'bg-purple-500/20 text-purple-400'
                                         }`}>
                                         {plan.planType === 'hours' ? '⏱️ Hour-based' : '📋 Work-based'}
                                     </span>
@@ -187,13 +207,13 @@ const SubscriptionPlans = () => {
                                 </div>
 
                                 <button
-                                    onClick={() => handleSubscribe(plan._id)}
+                                    onClick={() => handleSelectPlan(plan)}
                                     disabled={subscribing === plan._id || (currentSubscription && currentSubscription.status === 'active')}
                                     className={`w-full py-3 rounded-xl font-semibold transition-all ${currentSubscription && currentSubscription.status === 'active'
-                                            ? 'bg-slate-600/50 text-slate-400 cursor-not-allowed'
-                                            : index === 1
-                                                ? 'bg-gradient-to-r from-emerald-500 to-teal-500 text-white hover:from-emerald-600 hover:to-teal-600 shadow-lg shadow-emerald-500/25'
-                                                : 'bg-slate-700 text-white hover:bg-slate-600'
+                                        ? 'bg-slate-600/50 text-slate-400 cursor-not-allowed'
+                                        : index === 1
+                                            ? 'bg-gradient-to-r from-emerald-500 to-teal-500 text-white hover:from-emerald-600 hover:to-teal-600 shadow-lg shadow-emerald-500/25'
+                                            : 'bg-slate-700 text-white hover:bg-slate-600'
                                         }`}
                                 >
                                     {subscribing === plan._id ? (
@@ -222,6 +242,86 @@ const SubscriptionPlans = () => {
                     </button>
                 </div>
             </div>
+
+            {/* Payment Confirmation Modal */}
+            {showPaymentModal && selectedPlan && (
+                <div className="fixed inset-0 z-50 overflow-y-auto">
+                    <div className="flex items-center justify-center min-h-screen px-4 pt-4 pb-20">
+                        <div
+                            className="fixed inset-0 bg-black/60 backdrop-blur-sm"
+                            onClick={handleCloseModal}
+                        ></div>
+
+                        <div className="relative bg-slate-800 rounded-2xl border border-slate-700/50 shadow-2xl max-w-md w-full mx-auto p-6">
+                            {/* Modal Header */}
+                            <div className="text-center mb-6">
+                                <div className="text-5xl mb-4">💳</div>
+                                <h3 className="text-2xl font-bold text-white">Confirm Payment</h3>
+                                <p className="text-slate-400 mt-2">Complete payment to activate your subscription</p>
+                            </div>
+
+                            {/* Plan Details */}
+                            <div className="bg-slate-900/50 rounded-xl p-4 mb-6">
+                                <div className="flex justify-between items-center mb-3">
+                                    <span className="text-slate-400">Plan</span>
+                                    <span className="text-white font-medium">{selectedPlan.name}</span>
+                                </div>
+                                <div className="flex justify-between items-center mb-3">
+                                    <span className="text-slate-400">Type</span>
+                                    <span className={`px-2 py-1 rounded-full text-xs ${selectedPlan.planType === 'hours' ? 'bg-blue-500/20 text-blue-400' : 'bg-purple-500/20 text-purple-400'}`}>
+                                        {selectedPlan.planType === 'hours' ? '⏱️ Hour-based' : '📋 Work-based'}
+                                    </span>
+                                </div>
+                                <div className="flex justify-between items-center mb-3">
+                                    <span className="text-slate-400">Total {selectedPlan.planType}</span>
+                                    <span className="text-white font-medium">{selectedPlan.totalUnits}</span>
+                                </div>
+                                <div className="flex justify-between items-center mb-3">
+                                    <span className="text-slate-400">Validity</span>
+                                    <span className="text-white font-medium">{selectedPlan.validityDays} days</span>
+                                </div>
+                                <div className="border-t border-slate-700 pt-3 mt-3">
+                                    <div className="flex justify-between items-center">
+                                        <span className="text-lg text-white font-semibold">Total Amount</span>
+                                        <span className="text-2xl font-bold text-emerald-400">৳{selectedPlan.price}</span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            {/* Payment Method (Mock) */}
+                            <div className="mb-6">
+                                <p className="text-sm text-slate-400 mb-2">Payment Method</p>
+                                <div className="bg-slate-900/50 rounded-xl p-3 border border-emerald-500/30">
+                                    <div className="flex items-center">
+                                        <span className="text-2xl mr-3">💵</span>
+                                        <div>
+                                            <p className="text-white font-medium">Cash Payment</p>
+                                            <p className="text-slate-400 text-sm">Pay at service center</p>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            {/* Buttons */}
+                            <div className="flex gap-3">
+                                <button
+                                    onClick={handleCloseModal}
+                                    className="flex-1 px-6 py-3 bg-slate-700/50 text-slate-300 rounded-xl font-medium hover:bg-slate-700 transition-all"
+                                >
+                                    Cancel
+                                </button>
+                                <button
+                                    onClick={handleConfirmPayment}
+                                    disabled={subscribing}
+                                    className="flex-1 px-6 py-3 bg-gradient-to-r from-emerald-500 to-teal-500 text-white rounded-xl font-semibold hover:from-emerald-600 hover:to-teal-600 transition-all disabled:opacity-50"
+                                >
+                                    {subscribing ? 'Processing...' : '✓ Confirm Payment'}
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            )}
         </div>
     );
 };

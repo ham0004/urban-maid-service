@@ -296,6 +296,18 @@ const Dashboard = () => {
               >
                 View History
               </button>
+              <button
+                onClick={() => navigate('/subscription-plans')}
+                className="px-6 py-2 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 transition"
+              >
+                📦 Subscription Plans
+              </button>
+              <button
+                onClick={() => navigate('/my-subscription')}
+                className="px-6 py-2 bg-teal-100 text-teal-700 rounded-lg hover:bg-teal-200 transition"
+              >
+                💳 My Subscription
+              </button>
             </div>
           </div>
         )}
