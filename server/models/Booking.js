@@ -102,6 +102,17 @@ const bookingSchema = new mongoose.Schema(
                 type: Boolean,
                 default: false,
             },
+            // Dispute tracking
+            disputeReportedAt: {
+                type: Date,
+            },
+            disputeDeadline: {
+                type: Date, // 24 hours from disputeReportedAt
+            },
+            maidAcknowledged: {
+                type: Boolean,
+                default: false, // Maid clicked "Okay" on the 24-hour notice
+            },
         },
     },
     {

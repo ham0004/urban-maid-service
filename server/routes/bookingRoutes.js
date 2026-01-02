@@ -12,6 +12,7 @@ const {
     getUnpaidBookings,
     resendPaymentNotification,
     checkCustomerSubscription,
+    acknowledgeMaidDispute,
 } = require('../controllers/bookingController');
 const { protect, authorize } = require('../middleware/authMiddleware');
 
@@ -66,6 +67,11 @@ router.post('/admin/resend-payment/:id', authorize('admin'), resendPaymentNotifi
 // @desc    Maid confirms payment received
 // @access  Private (Maid)
 router.put('/:id/confirm-payment', confirmMaidPayment);
+
+// @route   PUT /api/bookings/:id/acknowledge-dispute
+// @desc    Maid acknowledges 24-hour service center notice
+// @access  Private (Maid)
+router.put('/:id/acknowledge-dispute', acknowledgeMaidDispute);
 
 // @route   GET /api/bookings/:id
 // @desc    Get single booking

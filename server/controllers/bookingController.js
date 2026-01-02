@@ -452,9 +452,16 @@ exports.confirmMaidPayment = async (req, res, next) => {
         booking.subscriptionPayment.paymentConfirmedAt = new Date();
 
         if (!isPaid) {
-            // Notify admin about unpaid booking
+            // Set dispute details
             booking.subscriptionPayment.adminNotified = true;
-            console.log(`⚠️ ADMIN NOTIFICATION: Maid reported unpaid for booking ${bookingId}`);
+            booking.subscriptionPayment.disputeReportedAt = new Date();
+
+            // Set 24-hour deadline
+            const deadline = new Date();
+            deadline.setHours(deadline.getHours() + 24);
+            booking.subscriptionPayment.disputeDeadline = deadline;
+
+            console.log(`⚠️ ADMIN NOTIFICATION: Maid reported unpaid for booking ${bookingId}. Deadline: ${deadline}`);
         }
 
         await booking.save();
@@ -469,8 +476,10 @@ exports.confirmMaidPayment = async (req, res, next) => {
             success: true,
             message: isPaid
                 ? 'Payment confirmed. Thank you!'
-                : 'Admin has been notified about the payment issue.',
+                : 'Admin has been notified. Please visit our service center within 24 hours to resolve this issue.',
             data: booking,
+            showServiceCenterNotice: !isPaid, // Flag for frontend to show the popup
+            deadline: !isPaid ? booking.subscriptionPayment.disputeDeadline : null,
         });
     } catch (error) {
         next(error);
@@ -499,6 +508,46 @@ exports.getUnpaidBookings = async (req, res, next) => {
             success: true,
             count: bookings.length,
             data: bookings,
+        });
+    } catch (error) {
+        next(error);
+    }
+};
+
+/**
+ * @desc    Maid acknowledges the 24-hour service center notice
+ * @route   PUT /api/bookings/:id/acknowledge-dispute
+ * @access  Private (Maid only)
+ * @author  Member-1 (Module 3 - Payment Dispute)
+ */
+exports.acknowledgeMaidDispute = async (req, res, next) => {
+    try {
+        const bookingId = req.params.id;
+
+        const booking = await Booking.findById(bookingId);
+        if (!booking) {
+            return res.status(404).json({
+                success: false,
+                message: 'Booking not found',
+            });
+        }
+
+        // Only maid can acknowledge
+        if (booking.maid.toString() !== req.user.id.toString()) {
+            return res.status(403).json({
+                success: false,
+                message: 'Only the assigned maid can acknowledge',
+            });
+        }
+
+        // Set acknowledged
+        booking.subscriptionPayment.maidAcknowledged = true;
+        await booking.save();
+
+        res.status(200).json({
+            success: true,
+            message: 'Thank you for acknowledging. Please visit our service center within 24 hours.',
+            deadline: booking.subscriptionPayment.disputeDeadline,
         });
     } catch (error) {
         next(error);

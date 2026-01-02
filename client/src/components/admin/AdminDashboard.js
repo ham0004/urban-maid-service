@@ -248,6 +248,12 @@ const AdminDashboard = () => {
                             >
                                 📊 Analytics
                             </a>
+                            <a
+                                href="/admin/payment-disputes"
+                                className="px-4 py-2 bg-red-500/20 text-red-400 rounded-lg hover:bg-red-500/30 transition-all duration-200 border border-red-500/30"
+                            >
+                                ⚠️ Disputes
+                            </a>
                             <span className="text-slate-300 hidden sm:block">Welcome, {user?.name}!</span>
                             <button
                                 onClick={handleLogout}
