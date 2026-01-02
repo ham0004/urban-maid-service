@@ -202,9 +202,7 @@ const MaidSearch = () => {
                                         className="w-full rounded-lg border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
                                     >
                                         <option value="rating">Rating (High to Low)</option>
-                                        <option value="price-low">Price (Low to High)</option>
-                                        <option value="price-high">Price (High to Low)</option>
-                                        {location && <option value="distance">Distance (Nearest)</option>}
+                                        <option value="experience">Experience (Most First)</option>
                                     </select>
                                 </div>
 
