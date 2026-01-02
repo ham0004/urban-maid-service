@@ -11,6 +11,8 @@ const {
     getSubscriptionHistory,
     cancelSubscription,
     checkSubscription,
+    getPendingSubscriptionPayments,
+    confirmSubscriptionPayment,
 } = require('../controllers/subscriptionController');
 const { protect, authorize } = require('../middleware/authMiddleware');
 
@@ -41,6 +43,12 @@ router.put('/plans/:id', protect, authorize('admin'), updatePlan);
 
 // Delete (deactivate) subscription plan
 router.delete('/plans/:id', protect, authorize('admin'), deletePlan);
+
+// Get pending subscription payments (for admin to confirm)
+router.get('/admin/pending-payments', protect, authorize('admin'), getPendingSubscriptionPayments);
+
+// Confirm subscription payment (admin confirms payment received)
+router.put('/admin/confirm-payment/:id', protect, authorize('admin'), confirmSubscriptionPayment);
 
 // ==========================================
 // Customer Routes (Protected)

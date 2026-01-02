@@ -13,6 +13,8 @@ const {
     resendPaymentNotification,
     checkCustomerSubscription,
     acknowledgeMaidDispute,
+    requestPayment,
+    confirmPayment,
 } = require('../controllers/bookingController');
 const { protect, authorize } = require('../middleware/authMiddleware');
 
@@ -82,5 +84,19 @@ router.get('/:id', getBookingById);
 // @desc    Update booking status
 // @access  Private (Maid/Customer)
 router.put('/:id/status', updateBookingStatus);
+
+// ========================================
+// REGULAR BOOKING PAYMENT ROUTES
+// ========================================
+
+// @route   PUT /api/bookings/:id/request-payment
+// @desc    Maid requests payment after work is done
+// @access  Private (Maid)
+router.put('/:id/request-payment', requestPayment);
+
+// @route   PUT /api/bookings/:id/customer-confirm-payment
+// @desc    Customer confirms payment for regular booking
+// @access  Private (Customer)
+router.put('/:id/customer-confirm-payment', confirmPayment);
 
 module.exports = router;

@@ -43,22 +43,32 @@ const MaidCard = ({ maid, onBook, isFavorite = false, onToggleFavorite }) => {
                 </div>
 
                 <div className="space-y-3 mb-6">
-                    <div className="flex items-center text-gray-600">
-                        <span className="font-medium mr-2">Rate:</span>
-                        <span>${maid.hourlyRate}/hr</span>
-                    </div>
+                    {/* Years of Experience */}
+                    {maid.experience !== undefined && maid.experience > 0 && (
+                        <div className="flex items-center text-gray-600">
+                            <span className="font-medium mr-2">💼 Experience:</span>
+                            <span className="bg-indigo-100 text-indigo-700 px-2 py-0.5 rounded-full text-sm font-medium">
+                                {maid.experience} year{maid.experience !== 1 ? 's' : ''}
+                            </span>
+                        </div>
+                    )}
 
+                    {/* Services */}
                     <div>
                         <span className="block font-medium text-gray-600 mb-1">Services:</span>
                         <div className="flex flex-wrap gap-2">
-                            {maid.serviceTypes.map((service, index) => (
-                                <span
-                                    key={index}
-                                    className="px-2 py-1 bg-gray-100 text-gray-700 text-xs rounded-md"
-                                >
-                                    {service}
-                                </span>
-                            ))}
+                            {maid.serviceTypes && maid.serviceTypes.length > 0 ? (
+                                maid.serviceTypes.map((service, index) => (
+                                    <span
+                                        key={index}
+                                        className="px-2 py-1 bg-emerald-100 text-emerald-700 text-xs rounded-md font-medium"
+                                    >
+                                        {service}
+                                    </span>
+                                ))
+                            ) : (
+                                <span className="text-gray-400 text-sm">No services listed</span>
+                            )}
                         </div>
                     </div>
 

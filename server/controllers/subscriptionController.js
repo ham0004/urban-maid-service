@@ -215,7 +215,7 @@ exports.subscribeToPlan = async (req, res, next) => {
         const endDate = new Date();
         endDate.setDate(endDate.getDate() + plan.validityDays);
 
-        // Create subscription
+        // Create subscription with PENDING payment (Admin must confirm)
         const subscription = await UserSubscription.create({
             customer: req.user.id,
             plan: planId,
@@ -223,48 +223,19 @@ exports.subscribeToPlan = async (req, res, next) => {
             startDate,
             endDate,
             status: 'active',
-            paymentStatus: 'paid', // In real scenario, this would be set after Stripe payment
+            paymentStatus: 'pending', // CHANGED: Admin must confirm payment at service center
         });
 
         // Populate plan details
         await subscription.populate('plan');
 
-        // Automatically generate invoice for subscription
-        try {
-            // Generate invoice number
-            const invoiceNumber = await Invoice.generateInvoiceNumber();
-
-            // Create invoice record (no PDF generation - data stored in MongoDB)
-            await Invoice.create({
-                invoiceNumber,
-                user: req.user.id,
-                subscription: subscription._id,
-                invoiceType: 'subscription',
-                amount: plan.price,
-                tax: 0,
-                totalAmount: plan.price,
-                items: [
-                    {
-                        description: `${plan.name} - ${plan.planType} (${plan.totalUnits} ${plan.planType === 'hourly' ? 'hours' : 'works'})`,
-                        quantity: 1,
-                        unitPrice: plan.price,
-                        total: plan.price,
-                    },
-                ],
-                paymentStatus: 'completed',
-                paymentMethod: 'Card',
-            });
-
-            console.log(`Invoice ${invoiceNumber} generated for subscription ${subscription._id}`);
-        } catch (invoiceError) {
-            // Log error but don't fail the subscription creation
-            console.error('Error generating subscription invoice:', invoiceError);
-        }
+        // NOTE: Invoice will be generated when admin confirms payment
 
         res.status(201).json({
             success: true,
-            message: 'Successfully subscribed to plan!',
+            message: 'Subscription request submitted! Please visit our service center to complete payment. Your subscription will be activated once admin confirms payment.',
             data: subscription,
+            paymentPending: true,
         });
     } catch (error) {
         next(error);
@@ -430,5 +401,103 @@ exports.deductFromSubscription = async (customerId, bookingId, units = 1) => {
     } catch (error) {
         console.error('Error deducting from subscription:', error);
         return null;
+    }
+};
+
+// ==========================================
+// ADMIN: Subscription Payment Management
+// ==========================================
+
+/**
+ * @desc    Get all pending subscription payment requests
+ * @route   GET /api/admin/subscription-payments
+ * @access  Admin only
+ */
+exports.getPendingSubscriptionPayments = async (req, res, next) => {
+    try {
+        const pendingSubscriptions = await UserSubscription.find({
+            paymentStatus: 'pending',
+        })
+            .populate('customer', 'name email phone')
+            .populate('plan', 'name price planType totalUnits validityDays')
+            .sort({ createdAt: -1 });
+
+        res.status(200).json({
+            success: true,
+            count: pendingSubscriptions.length,
+            data: pendingSubscriptions,
+        });
+    } catch (error) {
+        next(error);
+    }
+};
+
+/**
+ * @desc    Confirm subscription payment (Admin received payment at service center)
+ * @route   PUT /api/admin/subscription-payments/:id/confirm
+ * @access  Admin only
+ */
+exports.confirmSubscriptionPayment = async (req, res, next) => {
+    try {
+        const subscription = await UserSubscription.findById(req.params.id)
+            .populate('customer', 'name email')
+            .populate('plan', 'name price planType totalUnits');
+
+        if (!subscription) {
+            return res.status(404).json({
+                success: false,
+                message: 'Subscription not found',
+            });
+        }
+
+        if (subscription.paymentStatus === 'paid') {
+            return res.status(400).json({
+                success: false,
+                message: 'Payment already confirmed',
+            });
+        }
+
+        // Confirm payment
+        subscription.paymentStatus = 'paid';
+        subscription.paymentConfirmedAt = new Date();
+        subscription.paymentConfirmedBy = req.user.id;
+        await subscription.save();
+
+        // Generate invoice now that payment is confirmed
+        try {
+            const invoiceNumber = await Invoice.generateInvoiceNumber();
+            await Invoice.create({
+                invoiceNumber,
+                user: subscription.customer._id,
+                subscription: subscription._id,
+                invoiceType: 'subscription',
+                amount: subscription.plan.price,
+                tax: 0,
+                totalAmount: subscription.plan.price,
+                items: [
+                    {
+                        description: `${subscription.plan.name} - ${subscription.plan.planType} (${subscription.plan.totalUnits} ${subscription.plan.planType === 'hours' ? 'hours' : 'works'})`,
+                        quantity: 1,
+                        unitPrice: subscription.plan.price,
+                        total: subscription.plan.price,
+                    },
+                ],
+                paymentStatus: 'completed',
+                paymentMethod: 'Cash (Service Center)',
+            });
+            console.log(`✅ Invoice ${invoiceNumber} generated for confirmed subscription`);
+        } catch (invoiceError) {
+            console.error('Invoice generation error:', invoiceError);
+        }
+
+        console.log(`✅ Admin ${req.user.id} confirmed payment for subscription ${subscription._id}`);
+
+        res.status(200).json({
+            success: true,
+            message: `Payment confirmed for ${subscription.customer.name}. Subscription is now active!`,
+            data: subscription,
+        });
+    } catch (error) {
+        next(error);
     }
 };

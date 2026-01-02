@@ -190,16 +190,16 @@ exports.searchMaids = async (req, res, next) => {
                 verificationStatus: maid.maidProfile?.verificationStatus || 'unverified',
                 distance: null,
             };
-            
+
             console.log(`📍 Maid: ${maid.name} - Coords: lat=${maidData.latitude}, lng=${maidData.longitude}`);
-            
+
             return maidData;
         });
 
         // Calculate distances if customer location provided
         if (customerLat && customerLng) {
             console.log(`\n📏 Calculating distances from customer: ${customerLat}, ${customerLng}`);
-            
+
             const destinations = maidsData.map((maid) => ({
                 lat: maid.latitude,
                 lng: maid.longitude,
@@ -236,10 +236,8 @@ exports.searchMaids = async (req, res, next) => {
                 if (b.distance === null) return -1;
                 return a.distance - b.distance;
             });
-        } else if (sortBy === 'price-low') {
-            maidsData.sort((a, b) => a.hourlyRate - b.hourlyRate);
-        } else if (sortBy === 'price-high') {
-            maidsData.sort((a, b) => b.hourlyRate - a.hourlyRate);
+        } else if (sortBy === 'experience') {
+            maidsData.sort((a, b) => b.experience - a.experience);
         } else if (sortBy === 'rating') {
             maidsData.sort((a, b) => b.rating - a.rating);
         }

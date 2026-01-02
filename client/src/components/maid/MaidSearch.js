@@ -35,6 +35,7 @@ const MaidSearch = () => {
         if (navigator.geolocation) {
             navigator.geolocation.getCurrentPosition(
                 (position) => {
+                    console.log('📍 Got customer location:', position.coords.latitude, position.coords.longitude);
                     setLocation({
                         lat: position.coords.latitude,
                         lng: position.coords.longitude
@@ -42,6 +43,13 @@ const MaidSearch = () => {
                 },
                 (err) => {
                     console.error("Error getting location:", err);
+                    // Still allow search without location after error
+                    setLocation(null);
+                },
+                {
+                    enableHighAccuracy: true,
+                    timeout: 10000,
+                    maximumAge: 0
                 }
             );
         }
@@ -202,9 +210,8 @@ const MaidSearch = () => {
                                         className="w-full rounded-lg border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
                                     >
                                         <option value="rating">Rating (High to Low)</option>
-                                        <option value="price-low">Price (Low to High)</option>
-                                        <option value="price-high">Price (High to Low)</option>
-                                        {location && <option value="distance">Distance (Nearest)</option>}
+                                        <option value="experience">Experience (Most First)</option>
+                                        {location && <option value="distance">Nearest Distance</option>}
                                     </select>
                                 </div>
 

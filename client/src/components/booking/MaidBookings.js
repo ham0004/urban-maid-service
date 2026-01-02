@@ -8,6 +8,7 @@ const MaidBookings = () => {
     const [bookings, setBookings] = useState([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState('');
+    const [success, setSuccess] = useState('');
     const [actionLoading, setActionLoading] = useState(null);
 
     useEffect(() => {
@@ -35,11 +36,26 @@ const MaidBookings = () => {
             await api.put(`/bookings/${bookingId}/status`, { status, rejectionReason }, {
                 headers: { Authorization: `Bearer ${token}` }
             });
-            setBookings(prev => prev.map(b =>
-                b._id === bookingId ? { ...b, status } : b
-            ));
+            fetchBookings(); // Refresh to get updated status
         } catch (err) {
             setError(err.response?.data?.message || 'Failed to update booking');
+        } finally {
+            setActionLoading(null);
+        }
+    };
+
+    const handleRequestPayment = async (bookingId) => {
+        setActionLoading(bookingId);
+        try {
+            const token = localStorage.getItem('token');
+            const res = await api.put(`/bookings/${bookingId}/request-payment`, {}, {
+                headers: { Authorization: `Bearer ${token}` }
+            });
+            setSuccess(res.data.message || 'Payment request sent!');
+            fetchBookings();
+            setTimeout(() => setSuccess(''), 4000);
+        } catch (err) {
+            setError(err.response?.data?.message || 'Failed to request payment');
         } finally {
             setActionLoading(null);
         }
@@ -54,11 +70,20 @@ const MaidBookings = () => {
         const styles = {
             pending: 'bg-yellow-100 text-yellow-800',
             accepted: 'bg-blue-100 text-blue-800',
+            work_completed: 'bg-purple-100 text-purple-800',
             rejected: 'bg-red-100 text-red-800',
             completed: 'bg-green-100 text-green-800',
             cancelled: 'bg-gray-100 text-gray-800',
         };
-        return `px-3 py-1 rounded-full text-sm font-medium ${styles[status] || 'bg-gray-100'}`;
+        const labels = {
+            pending: 'Pending',
+            accepted: 'Accepted',
+            work_completed: 'Work Done',
+            rejected: 'Rejected',
+            completed: 'Completed',
+            cancelled: 'Cancelled',
+        };
+        return { className: `px-3 py-1 rounded-full text-sm font-medium ${styles[status] || 'bg-gray-100'}`, label: labels[status] || status };
     };
 
     if (loading) {
@@ -77,6 +102,11 @@ const MaidBookings = () => {
                 {error && (
                     <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg mb-6">
                         {error}
+                    </div>
+                )}
+                {success && (
+                    <div className="bg-green-50 border border-green-200 text-green-700 px-4 py-3 rounded-lg mb-6">
+                        {success}
                     </div>
                 )}
 
@@ -103,12 +133,17 @@ const MaidBookings = () => {
                                         {booking.notes && <p className="text-gray-500 italic mt-2">"{booking.notes}"</p>}
                                     </div>
                                     <div className="text-right">
-                                        <span className={getStatusBadge(booking.status)}>
-                                            {booking.status.charAt(0).toUpperCase() + booking.status.slice(1)}
+                                        <span className={getStatusBadge(booking.status).className}>
+                                            {getStatusBadge(booking.status).label}
                                         </span>
+                                        {booking.paymentStatus === 'awaiting_payment' && (
+                                            <span className="block mt-1 px-2 py-0.5 bg-orange-100 text-orange-700 text-xs rounded-full">
+                                                Payment Requested
+                                            </span>
+                                        )}
                                         <p className="text-2xl font-bold text-green-600 mt-2">৳{booking.totalPrice}</p>
 
-                                        {['accepted', 'completed'].includes(booking.status) && (
+                                        {['accepted', 'work_completed', 'completed'].includes(booking.status) && (
                                             <button
                                                 onClick={() => navigate(`/chat/${booking._id}`)}
                                                 className="mt-2 px-3 py-1 bg-blue-100 text-blue-700 rounded-lg hover:bg-blue-200 text-sm font-medium flex items-center justify-end ml-auto"
@@ -127,7 +162,7 @@ const MaidBookings = () => {
                                         <MaidPaymentConfirmation bookingId={booking._id} />
                                     </div>
 
-                                    <div className="flex gap-3">
+                                    <div className="flex gap-3 flex-wrap">
                                         {booking.status === 'pending' && (
                                             <>
                                                 <button
@@ -148,12 +183,26 @@ const MaidBookings = () => {
                                         )}
                                         {booking.status === 'accepted' && (
                                             <button
-                                                onClick={() => handleStatusUpdate(booking._id, 'completed')}
+                                                onClick={() => handleStatusUpdate(booking._id, 'work_completed')}
                                                 disabled={actionLoading === booking._id}
-                                                className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50"
+                                                className="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 disabled:opacity-50"
                                             >
-                                                ✓ Mark Completed
+                                                ✓ Mark Work Done
                                             </button>
+                                        )}
+                                        {booking.status === 'work_completed' && booking.paymentStatus !== 'awaiting_payment' && !booking.subscriptionPayment?.isSubscriptionBooking && (
+                                            <button
+                                                onClick={() => handleRequestPayment(booking._id)}
+                                                disabled={actionLoading === booking._id}
+                                                className="px-4 py-2 bg-orange-500 text-white rounded-lg hover:bg-orange-600 disabled:opacity-50"
+                                            >
+                                                💳 Request Payment
+                                            </button>
+                                        )}
+                                        {booking.status === 'work_completed' && booking.paymentStatus === 'awaiting_payment' && (
+                                            <span className="px-4 py-2 bg-orange-100 text-orange-700 rounded-lg">
+                                                ⏳ Waiting for customer payment...
+                                            </span>
                                         )}
                                     </div>
                                 </div>

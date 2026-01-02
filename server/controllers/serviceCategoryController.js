@@ -8,7 +8,7 @@ const ServiceCategory = require('../models/ServiceCategory');
  */
 exports.createCategory = async (req, res, next) => {
     try {
-        const { name, description, icon, pricing } = req.body;
+        const { name, description, icon, basePrice } = req.body;
 
         if (!name) {
             return res.status(400).json({
@@ -17,10 +17,10 @@ exports.createCategory = async (req, res, next) => {
             });
         }
 
-        if (!pricing || pricing.length === 0) {
+        if (!basePrice || basePrice <= 0) {
             return res.status(400).json({
                 success: false,
-                message: 'Please provide at least one pricing tier',
+                message: 'Please provide a valid hourly rate',
             });
         }
 
@@ -36,7 +36,7 @@ exports.createCategory = async (req, res, next) => {
             name,
             description,
             icon,
-            pricing,
+            basePrice,
             createdBy: req.user._id,
         });
 
@@ -117,7 +117,7 @@ exports.getCategoryById = async (req, res, next) => {
  */
 exports.updateCategory = async (req, res, next) => {
     try {
-        const { name, description, icon, pricing, isActive } = req.body;
+        const { name, description, icon, basePrice, isActive } = req.body;
 
         let category = await ServiceCategory.findById(req.params.id);
 
@@ -141,7 +141,7 @@ exports.updateCategory = async (req, res, next) => {
         if (name) category.name = name;
         if (description !== undefined) category.description = description;
         if (icon) category.icon = icon;
-        if (pricing) category.pricing = pricing;
+        if (basePrice) category.basePrice = basePrice;
         if (typeof isActive === 'boolean') category.isActive = isActive;
 
         await category.save();
