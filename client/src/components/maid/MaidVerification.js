@@ -6,7 +6,7 @@ const MaidVerification = () => {
     const navigate = useNavigate();
     const [formData, setFormData] = useState({
         experience: '',
-        skills: '',
+        serviceTypes: [],
         docType: 'NID',
     });
     const [files, setFiles] = useState([]);
@@ -14,8 +14,29 @@ const MaidVerification = () => {
     const [error, setError] = useState('');
     const [step, setStep] = useState(1);
 
+    // Common service types for maids
+    const serviceOptions = [
+        'Cleaning',
+        'Cooking',
+        'Laundry',
+        'Child Care',
+        'Elderly Care',
+        'Pet Care'
+    ];
+
     const handleChange = (e) => {
         setFormData({ ...formData, [e.target.name]: e.target.value });
+    };
+
+    const handleServiceToggle = (service) => {
+        setFormData(prev => {
+            const currentServices = prev.serviceTypes;
+            if (currentServices.includes(service)) {
+                return { ...prev, serviceTypes: currentServices.filter(s => s !== service) };
+            } else {
+                return { ...prev, serviceTypes: [...currentServices, service] };
+            }
+        });
     };
 
     const handleFileChange = (e) => {
@@ -25,16 +46,37 @@ const MaidVerification = () => {
     const handleProfileSubmit = async (e) => {
         e.preventDefault();
         setError('');
+
+        // Validation
+        if (!formData.experience || formData.experience <= 0) {
+            setError('Please enter your years of experience.');
+            return;
+        }
+        if (formData.serviceTypes.length === 0) {
+            setError('Please select at least one service type.');
+            return;
+        }
+
         setLoading(true);
 
         try {
             const token = localStorage.getItem('token');
+            // Save both experience and serviceTypes
             await api.put('/maids/profile', {
                 experience: parseInt(formData.experience),
-                skills: formData.skills.split(',').map(s => s.trim()),
+                skills: formData.serviceTypes, // Save as skills for backward compatibility
             }, {
                 headers: { Authorization: `Bearer ${token}` }
             });
+
+            // Also initialize serviceTypes for search functionality
+            await api.post('/maids/initialize', {
+                serviceTypes: formData.serviceTypes,
+                hourlyRate: 0 // Default rate
+            }, {
+                headers: { Authorization: `Bearer ${token}` }
+            });
+
             setStep(2);
         } catch (err) {
             setError(err.response?.data?.message || 'Failed to update profile');
@@ -136,18 +178,25 @@ const MaidVerification = () => {
                                 </div>
 
                                 <div>
-                                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                                        Skills (comma separated)
+                                    <label className="block text-sm font-medium text-gray-700 mb-3">
+                                        Services You Offer (Select all that apply)
                                     </label>
-                                    <input
-                                        type="text"
-                                        name="skills"
-                                        value={formData.skills}
-                                        onChange={handleChange}
-                                        required
-                                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                                        placeholder="e.g., Cleaning, Cooking, Laundry"
-                                    />
+                                    <div className="grid grid-cols-2 gap-3">
+                                        {serviceOptions.map(service => (
+                                            <div
+                                                key={service}
+                                                onClick={() => handleServiceToggle(service)}
+                                                className={`
+                                                    cursor-pointer px-4 py-3 border rounded-lg text-sm font-medium text-center transition-all
+                                                    ${formData.serviceTypes.includes(service)
+                                                        ? 'bg-blue-50 border-blue-500 text-blue-700 ring-1 ring-blue-500'
+                                                        : 'bg-white border-gray-300 text-gray-700 hover:bg-gray-50'}
+                                                `}
+                                            >
+                                                {formData.serviceTypes.includes(service) && '✓ '}{service}
+                                            </div>
+                                        ))}
+                                    </div>
                                 </div>
 
                                 <button
