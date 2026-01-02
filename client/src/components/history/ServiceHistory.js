@@ -9,16 +9,27 @@ import api from '../../utils/api';
  */
 const ServiceHistory = () => {
     const navigate = useNavigate();
+    const [user, setUser] = useState(null);
     const [activeTab, setActiveTab] = useState('services');
     const [services, setServices] = useState([]);
     const [payments, setPayments] = useState([]);
     const [invoices, setInvoices] = useState([]);
+    const [earnings, setEarnings] = useState([]);
+    const [totalEarnings, setTotalEarnings] = useState(0);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState('');
 
+    // Get user role
     useEffect(() => {
-        fetchData();
-    }, [activeTab]);
+        const userData = localStorage.getItem('user');
+        if (userData) {
+            setUser(JSON.parse(userData));
+        }
+    }, []);
+
+    useEffect(() => {
+        if (user) fetchData();
+    }, [activeTab, user]);
 
     const fetchData = async () => {
         setLoading(true);
@@ -36,6 +47,13 @@ const ServiceHistory = () => {
             } else if (activeTab === 'invoices') {
                 const res = await api.get('/history/invoices', { headers });
                 setInvoices(res.data.data);
+            } else if (activeTab === 'earnings') {
+                // Fetch maid's completed bookings as earnings
+                const res = await api.get('/bookings/maid', { headers });
+                const completedBookings = res.data.data.filter(b => b.status === 'completed');
+                setEarnings(completedBookings);
+                const total = completedBookings.reduce((sum, b) => sum + (b.totalPrice || 0), 0);
+                setTotalEarnings(total);
             }
         } catch (err) {
             setError(err.response?.data?.message || 'Failed to load data');
@@ -111,23 +129,56 @@ const ServiceHistory = () => {
                     </button>
                 </div>
 
-                {/* Tabs */}
+                {/* Tabs - Role-based */}
                 <div className="bg-white rounded-lg shadow-md mb-6">
                     <div className="flex border-b">
-                        {['services', 'payments', 'invoices'].map((tab) => (
+                        {/* Services tab - shown to all */}
+                        <button
+                            onClick={() => setActiveTab('services')}
+                            className={`flex-1 py-4 text-center font-medium transition ${activeTab === 'services'
+                                ? 'text-indigo-600 border-b-2 border-indigo-600'
+                                : 'text-gray-500 hover:text-gray-700'
+                                }`}
+                        >
+                            🧹 Services
+                        </button>
+
+                        {/* Customer-only tabs */}
+                        {user?.role === 'customer' && (
+                            <>
+                                <button
+                                    onClick={() => setActiveTab('payments')}
+                                    className={`flex-1 py-4 text-center font-medium transition ${activeTab === 'payments'
+                                        ? 'text-indigo-600 border-b-2 border-indigo-600'
+                                        : 'text-gray-500 hover:text-gray-700'
+                                        }`}
+                                >
+                                    💳 Payments
+                                </button>
+                                <button
+                                    onClick={() => setActiveTab('invoices')}
+                                    className={`flex-1 py-4 text-center font-medium transition ${activeTab === 'invoices'
+                                        ? 'text-indigo-600 border-b-2 border-indigo-600'
+                                        : 'text-gray-500 hover:text-gray-700'
+                                        }`}
+                                >
+                                    📄 Invoices
+                                </button>
+                            </>
+                        )}
+
+                        {/* Maid-only: Earnings tab */}
+                        {user?.role === 'maid' && (
                             <button
-                                key={tab}
-                                onClick={() => setActiveTab(tab)}
-                                className={`flex-1 py-4 text-center font-medium transition ${activeTab === tab
-                                    ? 'text-indigo-600 border-b-2 border-indigo-600'
+                                onClick={() => setActiveTab('earnings')}
+                                className={`flex-1 py-4 text-center font-medium transition ${activeTab === 'earnings'
+                                    ? 'text-green-600 border-b-2 border-green-600'
                                     : 'text-gray-500 hover:text-gray-700'
                                     }`}
                             >
-                                {tab === 'services' && '🧹 Services'}
-                                {tab === 'payments' && '💳 Payments'}
-                                {tab === 'invoices' && '📄 Invoices'}
+                                💰 My Earnings
                             </button>
-                        ))}
+                        )}
                     </div>
                 </div>
 
@@ -246,6 +297,54 @@ const ServiceHistory = () => {
                                                     >
                                                         📥 Download PDF
                                                     </button>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    ))
+                                )}
+                            </div>
+                        )}
+
+                        {/* Earnings Tab - Maid only */}
+                        {activeTab === 'earnings' && (
+                            <div className="space-y-4">
+                                {/* Total Earnings Card */}
+                                <div className="bg-gradient-to-r from-green-500 to-emerald-600 rounded-lg shadow-md p-6 text-white">
+                                    <div className="flex justify-between items-center">
+                                        <div>
+                                            <p className="text-green-100 text-sm">Total Earnings</p>
+                                            <h2 className="text-4xl font-bold">৳{totalEarnings.toLocaleString()}</h2>
+                                        </div>
+                                        <div className="text-6xl opacity-20">💰</div>
+                                    </div>
+                                    <p className="text-green-100 text-sm mt-2">
+                                        From {earnings.length} completed job{earnings.length !== 1 ? 's' : ''}
+                                    </p>
+                                </div>
+
+                                {/* Earnings List */}
+                                {earnings.length === 0 ? (
+                                    <div className="bg-white rounded-lg shadow-md p-8 text-center">
+                                        <p className="text-gray-500">No completed jobs yet</p>
+                                    </div>
+                                ) : (
+                                    earnings.map((job) => (
+                                        <div key={job._id} className="bg-white rounded-lg shadow-md p-6">
+                                            <div className="flex justify-between items-start">
+                                                <div>
+                                                    <h3 className="text-lg font-semibold text-gray-900">
+                                                        {job.serviceCategory?.icon} {job.serviceCategory?.name}
+                                                    </h3>
+                                                    <p className="text-gray-600">Customer: {job.customer?.name}</p>
+                                                    <p className="text-gray-600">📅 {formatDate(job.scheduledDate)} at {job.scheduledTime}</p>
+                                                    <p className="text-gray-600">⏱ {job.duration} mins</p>
+                                                    <p className="text-gray-600">📍 {job.address?.street}, {job.address?.city}</p>
+                                                </div>
+                                                <div className="text-right">
+                                                    <span className="px-3 py-1 bg-green-100 text-green-800 rounded-full text-sm font-medium">
+                                                        ✅ Completed
+                                                    </span>
+                                                    <p className="text-2xl font-bold text-green-600 mt-2">+৳{job.totalPrice}</p>
                                                 </div>
                                             </div>
                                         </div>

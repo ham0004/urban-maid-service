@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import api from '../../utils/api';
-import CustomerPaymentAction from '../payment/CustomerPaymentAction';
 import ReviewForm from '../review/ReviewForm';
 
 const MyBookings = () => {
@@ -9,7 +8,9 @@ const MyBookings = () => {
     const [bookings, setBookings] = useState([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState('');
+    const [success, setSuccess] = useState('');
     const [reviewBookingId, setReviewBookingId] = useState(null);
+    const [actionLoading, setActionLoading] = useState(null);
 
     useEffect(() => {
         const fetchBookings = async () => {
@@ -41,15 +42,45 @@ const MyBookings = () => {
         }
     };
 
+    const handleConfirmPayment = async (bookingId) => {
+        setActionLoading(bookingId);
+        try {
+            const token = localStorage.getItem('token');
+            const res = await api.put(`/bookings/${bookingId}/customer-confirm-payment`, {}, {
+                headers: { Authorization: `Bearer ${token}` }
+            });
+            setSuccess(res.data.message || 'Payment confirmed! Invoice generated.');
+            // Refresh bookings
+            const updatedRes = await api.get('/bookings/my', {
+                headers: { Authorization: `Bearer ${token}` }
+            });
+            setBookings(updatedRes.data.data);
+            setTimeout(() => setSuccess(''), 5000);
+        } catch (err) {
+            setError(err.response?.data?.message || 'Failed to confirm payment');
+        } finally {
+            setActionLoading(null);
+        }
+    };
+
     const getStatusBadge = (status) => {
         const styles = {
             pending: 'bg-yellow-100 text-yellow-800',
             accepted: 'bg-blue-100 text-blue-800',
+            work_completed: 'bg-purple-100 text-purple-800',
             rejected: 'bg-red-100 text-red-800',
             completed: 'bg-green-100 text-green-800',
             cancelled: 'bg-gray-100 text-gray-800',
         };
-        return `px-3 py-1 rounded-full text-sm font-medium ${styles[status] || 'bg-gray-100'}`;
+        const labels = {
+            pending: 'Pending',
+            accepted: 'Accepted',
+            work_completed: 'Work Completed',
+            rejected: 'Rejected',
+            completed: 'Completed',
+            cancelled: 'Cancelled',
+        };
+        return { className: `px-3 py-1 rounded-full text-sm font-medium ${styles[status] || 'bg-gray-100'}`, label: labels[status] || status };
     };
 
     if (loading) {
@@ -78,6 +109,11 @@ const MyBookings = () => {
                         {error}
                     </div>
                 )}
+                {success && (
+                    <div className="bg-green-50 border border-green-200 text-green-700 px-4 py-3 rounded-lg mb-6">
+                        ✅ {success}
+                    </div>
+                )}
 
                 {bookings.length === 0 ? (
                     <div className="bg-white rounded-lg shadow-md p-8 text-center">
@@ -100,12 +136,17 @@ const MyBookings = () => {
                                         <p className="text-gray-600">📍 {booking.address?.street}, {booking.address?.city}</p>
                                     </div>
                                     <div className="text-right">
-                                        <span className={getStatusBadge(booking.status)}>
-                                            {booking.status.charAt(0).toUpperCase() + booking.status.slice(1)}
+                                        <span className={getStatusBadge(booking.status).className}>
+                                            {getStatusBadge(booking.status).label}
                                         </span>
+                                        {booking.paymentStatus === 'awaiting_payment' && (
+                                            <span className="block mt-1 px-2 py-0.5 bg-orange-100 text-orange-700 text-xs rounded-full">
+                                                Payment Required
+                                            </span>
+                                        )}
                                         <p className="text-2xl font-bold text-indigo-600 mt-2">৳{booking.totalPrice}</p>
 
-                                        {['accepted', 'completed'].includes(booking.status) && (
+                                        {['accepted', 'work_completed', 'completed'].includes(booking.status) && (
                                             <button
                                                 onClick={() => navigate(`/chat/${booking._id}`)}
                                                 className="mt-2 px-3 py-1 bg-indigo-100 text-indigo-700 rounded-lg hover:bg-indigo-200 text-sm font-medium flex items-center justify-end ml-auto"
@@ -115,13 +156,27 @@ const MyBookings = () => {
                                         )}
                                     </div>
                                 </div>
+
+                                {/* Payment Required - Show Confirm Payment Button */}
+                                {booking.paymentStatus === 'awaiting_payment' && (
+                                    <div className="mt-4 pt-4 border-t">
+                                        <div className="bg-orange-50 border border-orange-200 rounded-lg p-4 mb-3">
+                                            <p className="text-orange-800 font-medium">💰 Maid has completed the work and is requesting payment</p>
+                                            <p className="text-orange-600 text-sm mt-1">Please confirm payment to complete this booking.</p>
+                                        </div>
+                                        <button
+                                            onClick={() => handleConfirmPayment(booking._id)}
+                                            disabled={actionLoading === booking._id}
+                                            className="w-full px-4 py-3 bg-gradient-to-r from-green-500 to-emerald-500 text-white rounded-lg hover:from-green-600 hover:to-emerald-600 font-semibold disabled:opacity-50"
+                                        >
+                                            {actionLoading === booking._id ? 'Processing...' : '✓ Confirm Payment & Complete'}
+                                        </button>
+                                    </div>
+                                )}
+
+                                {/* Cancel Button - Only for pending/accepted (non-completed) */}
                                 {['pending', 'accepted'].includes(booking.status) && (
                                     <div className="mt-4 pt-4 border-t">
-                                        {/* Payment Component */}
-                                        <div className="mb-3">
-                                            <CustomerPaymentAction bookingId={booking._id} />
-                                        </div>
-
                                         <button
                                             onClick={() => handleCancel(booking._id)}
                                             className="w-full px-4 py-2 bg-red-100 text-red-700 rounded-lg hover:bg-red-200 text-sm"

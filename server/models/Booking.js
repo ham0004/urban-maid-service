@@ -37,8 +37,21 @@ const bookingSchema = new mongoose.Schema(
         },
         status: {
             type: String,
-            enum: ['pending', 'accepted', 'rejected', 'completed', 'cancelled'],
+            enum: ['pending', 'accepted', 'rejected', 'work_completed', 'completed', 'cancelled'],
             default: 'pending',
+        },
+        // Payment status for regular (non-subscription) bookings
+        // pending = just booked, awaiting_payment = maid requested, paid = customer confirmed
+        paymentStatus: {
+            type: String,
+            enum: ['pending', 'awaiting_payment', 'paid', 'subscription'],
+            default: 'pending',
+        },
+        paymentRequestedAt: {
+            type: Date,
+        },
+        paymentConfirmedAt: {
+            type: Date,
         },
         totalPrice: {
             type: Number,

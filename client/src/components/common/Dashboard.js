@@ -251,9 +251,9 @@ const Dashboard = () => {
               </button>
               <button
                 onClick={() => navigate('/history')}
-                className="px-6 py-2 bg-blue-100 text-blue-700 rounded-lg hover:bg-blue-200 transition"
+                className="px-6 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition"
               >
-                View History
+                💰 My Earnings
               </button>
             </div>
           </div>

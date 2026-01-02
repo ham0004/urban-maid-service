@@ -227,7 +227,8 @@ exports.updateBookingStatus = async (req, res, next) => {
         // Validate status transitions
         const validTransitions = {
             pending: ['accepted', 'rejected', 'cancelled'],
-            accepted: ['completed', 'cancelled'],
+            accepted: ['work_completed', 'cancelled'], // Maid marks work done
+            work_completed: ['completed', 'cancelled'], // System completes after payment
             rejected: [],
             completed: [],
             cancelled: [],
@@ -241,7 +242,7 @@ exports.updateBookingStatus = async (req, res, next) => {
         }
 
         // Permission checks
-        if (['accepted', 'rejected', 'completed'].includes(status) && !isMaid) {
+        if (['accepted', 'rejected', 'work_completed'].includes(status) && !isMaid) {
             return res.status(403).json({
                 success: false,
                 message: 'Only the assigned maid can perform this action',
@@ -260,11 +261,14 @@ exports.updateBookingStatus = async (req, res, next) => {
         if (status === 'rejected' && rejectionReason) {
             booking.rejectionReason = rejectionReason;
         }
-        if (status === 'completed') {
-            booking.completedAt = new Date();
 
-            // Module 3 Feature 1: Deduct from customer's subscription if it's a subscription booking
+        // When maid marks work as completed
+        if (status === 'work_completed') {
+            booking.completedAt = new Date();
+            // For subscription bookings, auto-complete (no payment needed from customer)
             if (booking.subscriptionPayment?.isSubscriptionBooking) {
+                booking.status = 'completed';
+                booking.paymentStatus = 'subscription';
                 try {
                     const unitsToDeduct = booking.subscriptionPayment.unitsDeducted || 1;
                     const subscription = await deductFromSubscription(booking.customer, booking._id, unitsToDeduct);
@@ -275,6 +279,7 @@ exports.updateBookingStatus = async (req, res, next) => {
                     console.log('Subscription deduction error:', subError.message);
                 }
             }
+            // For regular bookings, wait for customer payment confirmation
         }
 
         await booking.save();
@@ -630,6 +635,159 @@ exports.checkCustomerSubscription = async (req, res, next) => {
                 totalUnits: subscription.plan.totalUnits,
                 pricePerUnit: Math.round(subscription.plan.price / subscription.plan.totalUnits),
                 endDate: subscription.endDate,
+            },
+        });
+    } catch (error) {
+        next(error);
+    }
+};
+
+// ==========================================
+// REGULAR BOOKING PAYMENT ENDPOINTS
+// ==========================================
+
+/**
+ * @desc    Maid requests payment from customer after work is done
+ * @route   PUT /api/bookings/:id/request-payment
+ * @access  Private (Maid)
+ */
+exports.requestPayment = async (req, res, next) => {
+    try {
+        const booking = await Booking.findById(req.params.id)
+            .populate('customer', 'name email')
+            .populate('maid', 'name email')
+            .populate('serviceCategory', 'name');
+
+        if (!booking) {
+            return res.status(404).json({
+                success: false,
+                message: 'Booking not found',
+            });
+        }
+
+        // Only maid can request payment
+        if (booking.maid._id.toString() !== req.user.id) {
+            return res.status(403).json({
+                success: false,
+                message: 'Only the assigned maid can request payment',
+            });
+        }
+
+        // Can only request payment after work is completed
+        if (booking.status !== 'work_completed') {
+            return res.status(400).json({
+                success: false,
+                message: 'Can only request payment after work is marked as completed',
+            });
+        }
+
+        // Don't allow for subscription bookings
+        if (booking.subscriptionPayment?.isSubscriptionBooking) {
+            return res.status(400).json({
+                success: false,
+                message: 'Subscription bookings do not require payment request',
+            });
+        }
+
+        // Update payment status
+        booking.paymentStatus = 'awaiting_payment';
+        booking.paymentRequestedAt = new Date();
+        await booking.save();
+
+        console.log(`💳 Maid ${booking.maid.name} requested payment from ${booking.customer.name} for ৳${booking.totalPrice}`);
+
+        res.status(200).json({
+            success: true,
+            message: `Payment request sent to ${booking.customer.name}`,
+            data: booking,
+        });
+    } catch (error) {
+        next(error);
+    }
+};
+
+/**
+ * @desc    Customer confirms payment and completes booking
+ * @route   PUT /api/bookings/:id/confirm-payment
+ * @access  Private (Customer)
+ */
+exports.confirmPayment = async (req, res, next) => {
+    try {
+        const Invoice = require('../models/Invoice');
+
+        const booking = await Booking.findById(req.params.id)
+            .populate('customer', 'name email')
+            .populate('maid', 'name email')
+            .populate('serviceCategory', 'name');
+
+        if (!booking) {
+            return res.status(404).json({
+                success: false,
+                message: 'Booking not found',
+            });
+        }
+
+        // Only customer can confirm payment
+        if (booking.customer._id.toString() !== req.user.id) {
+            return res.status(403).json({
+                success: false,
+                message: 'Only the customer can confirm payment',
+            });
+        }
+
+        // Can only confirm payment when awaiting
+        if (booking.paymentStatus !== 'awaiting_payment') {
+            return res.status(400).json({
+                success: false,
+                message: 'No payment pending for this booking',
+            });
+        }
+
+        // Update booking status
+        booking.paymentStatus = 'paid';
+        booking.paymentConfirmedAt = new Date();
+        booking.status = 'completed';
+        await booking.save();
+
+        // Generate invoice
+        let invoice = null;
+        try {
+            const invoiceNumber = await Invoice.generateInvoiceNumber();
+            invoice = await Invoice.create({
+                invoiceNumber,
+                user: booking.customer._id,
+                booking: booking._id,
+                invoiceType: 'booking',
+                amount: booking.totalPrice,
+                tax: 0,
+                totalAmount: booking.totalPrice,
+                items: [
+                    {
+                        description: `${booking.serviceCategory?.name || 'Service'} - ${booking.duration} minutes`,
+                        quantity: 1,
+                        unitPrice: booking.totalPrice,
+                        total: booking.totalPrice,
+                    },
+                ],
+                paymentStatus: 'completed',
+                paymentMethod: 'Cash',
+            });
+            console.log(`✅ Invoice ${invoiceNumber} generated for booking ${booking._id}`);
+        } catch (invoiceError) {
+            console.error('Invoice generation error:', invoiceError);
+        }
+
+        console.log(`💰 Customer ${booking.customer.name} confirmed payment of ৳${booking.totalPrice}`);
+
+        res.status(200).json({
+            success: true,
+            message: 'Payment confirmed! Booking completed.',
+            data: {
+                booking,
+                invoice: invoice ? {
+                    invoiceNumber: invoice.invoiceNumber,
+                    amount: invoice.totalAmount,
+                } : null,
             },
         });
     } catch (error) {
