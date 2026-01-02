@@ -69,11 +69,11 @@ const SubscriptionPlans = () => {
             setSubscribing(selectedPlan._id);
             setError('');
             const response = await api.post(`/subscriptions/subscribe/${selectedPlan._id}`);
-            setSuccess('Payment successful! Subscription activated 🎉');
+            setSuccess('Subscription request submitted! Please visit our service center to complete payment. Admin will confirm once payment is received.');
             setCurrentSubscription(response.data.data);
             setShowPaymentModal(false);
             setSelectedPlan(null);
-            setTimeout(() => setSuccess(''), 5000);
+            setTimeout(() => setSuccess(''), 8000);
         } catch (err) {
             setError(err.message || 'Failed to subscribe');
         } finally {
@@ -108,8 +108,28 @@ const SubscriptionPlans = () => {
                     </p>
                 </div>
 
-                {/* Current Subscription Banner */}
-                {currentSubscription && currentSubscription.status === 'active' && (
+                {/* Pending Payment Banner */}
+                {currentSubscription && currentSubscription.paymentStatus === 'pending' && (
+                    <div className="mb-8 bg-orange-500/20 border border-orange-500/30 rounded-2xl p-6">
+                        <div className="flex flex-col md:flex-row md:items-center md:justify-between">
+                            <div>
+                                <h3 className="text-lg font-semibold text-orange-400 flex items-center">
+                                    <span className="mr-2">⏳</span> Payment Pending
+                                </h3>
+                                <p className="text-slate-300 mt-1">
+                                    <span className="font-medium">{currentSubscription.plan?.name}</span> •
+                                    <span className="ml-2">৳{currentSubscription.plan?.price}</span>
+                                </p>
+                                <p className="text-slate-400 text-sm mt-1">
+                                    Please visit our service center to complete payment. Your subscription will be activated once admin confirms.
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                )}
+
+                {/* Active Subscription Banner */}
+                {currentSubscription && currentSubscription.status === 'active' && currentSubscription.paymentStatus === 'paid' && (
                     <div className="mb-8 bg-emerald-500/20 border border-emerald-500/30 rounded-2xl p-6">
                         <div className="flex flex-col md:flex-row md:items-center md:justify-between">
                             <div>
@@ -255,9 +275,9 @@ const SubscriptionPlans = () => {
                         <div className="relative bg-slate-800 rounded-2xl border border-slate-700/50 shadow-2xl max-w-md w-full mx-auto p-6">
                             {/* Modal Header */}
                             <div className="text-center mb-6">
-                                <div className="text-5xl mb-4">💳</div>
-                                <h3 className="text-2xl font-bold text-white">Confirm Payment</h3>
-                                <p className="text-slate-400 mt-2">Complete payment to activate your subscription</p>
+                                <div className="text-5xl mb-4">📋</div>
+                                <h3 className="text-2xl font-bold text-white">Request Subscription</h3>
+                                <p className="text-slate-400 mt-2">Submit request and pay at our service center</p>
                             </div>
 
                             {/* Plan Details */}
@@ -315,7 +335,7 @@ const SubscriptionPlans = () => {
                                     disabled={subscribing}
                                     className="flex-1 px-6 py-3 bg-gradient-to-r from-emerald-500 to-teal-500 text-white rounded-xl font-semibold hover:from-emerald-600 hover:to-teal-600 transition-all disabled:opacity-50"
                                 >
-                                    {subscribing ? 'Processing...' : '✓ Confirm Payment'}
+                                    {subscribing ? 'Submitting...' : '📤 Submit Request'}
                                 </button>
                             </div>
                         </div>

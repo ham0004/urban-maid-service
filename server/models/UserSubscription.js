@@ -41,6 +41,14 @@ const userSubscriptionSchema = new mongoose.Schema(
             enum: ['pending', 'paid', 'failed'],
             default: 'pending',
         },
+        // Track who and when confirmed the payment
+        paymentConfirmedAt: {
+            type: Date,
+        },
+        paymentConfirmedBy: {
+            type: mongoose.Schema.Types.ObjectId,
+            ref: 'User',
+        },
         usageHistory: [
             {
                 booking: {

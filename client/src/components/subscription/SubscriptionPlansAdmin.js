@@ -3,11 +3,13 @@ import api from '../../utils/api';
 
 /**
  * Subscription Plans Admin Component
- * @description Admin panel for managing subscription plans
+ * @description Admin panel for managing subscription plans and pending payments
  * @author Member-1 (Module 3 - Subscription & Membership Plans)
  */
 const SubscriptionPlansAdmin = () => {
     const [plans, setPlans] = useState([]);
+    const [pendingPayments, setPendingPayments] = useState([]);
+    const [activeTab, setActiveTab] = useState('plans'); // 'plans' or 'payments'
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState('');
     const [success, setSuccess] = useState('');
@@ -25,6 +27,7 @@ const SubscriptionPlansAdmin = () => {
         validityDays: '30',
     });
     const [formLoading, setFormLoading] = useState(false);
+    const [confirmingPayment, setConfirmingPayment] = useState(null);
 
     const fetchPlans = useCallback(async () => {
         try {
@@ -39,9 +42,40 @@ const SubscriptionPlansAdmin = () => {
         }
     }, []);
 
+    const fetchPendingPayments = useCallback(async () => {
+        try {
+            setLoading(true);
+            const response = await api.get('/subscriptions/admin/pending-payments');
+            setPendingPayments(response.data.data);
+            setError('');
+        } catch (err) {
+            setError(err.message || 'Failed to fetch pending payments');
+        } finally {
+            setLoading(false);
+        }
+    }, []);
+
     useEffect(() => {
-        fetchPlans();
-    }, [fetchPlans]);
+        if (activeTab === 'plans') {
+            fetchPlans();
+        } else {
+            fetchPendingPayments();
+        }
+    }, [activeTab, fetchPlans, fetchPendingPayments]);
+
+    const handleConfirmPayment = async (subscriptionId) => {
+        setConfirmingPayment(subscriptionId);
+        try {
+            await api.put(`/subscriptions/admin/confirm-payment/${subscriptionId}`);
+            setSuccess('Payment confirmed! Subscription is now active.');
+            fetchPendingPayments();
+            setTimeout(() => setSuccess(''), 4000);
+        } catch (err) {
+            setError(err.message || 'Failed to confirm payment');
+        } finally {
+            setConfirmingPayment(null);
+        }
+    };
 
     const openCreateModal = () => {
         setModalMode('create');
@@ -145,15 +179,44 @@ const SubscriptionPlansAdmin = () => {
                 {/* Header */}
                 <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between">
                     <div>
-                        <h2 className="text-2xl font-bold text-white mb-1">Subscription Plans</h2>
-                        <p className="text-slate-400 text-sm">Manage membership packages for customers</p>
+                        <h2 className="text-2xl font-bold text-white mb-1">Subscription Management</h2>
+                        <p className="text-slate-400 text-sm">Manage plans and payment confirmations</p>
                     </div>
+                    {activeTab === 'plans' && (
+                        <button
+                            onClick={openCreateModal}
+                            className="mt-4 sm:mt-0 px-5 py-2.5 bg-gradient-to-r from-emerald-500 to-teal-500 text-white rounded-xl font-medium hover:from-emerald-600 hover:to-teal-600 transition-all duration-200 shadow-lg shadow-emerald-500/25 flex items-center"
+                        >
+                            <span className="mr-2">➕</span>
+                            Add Plan
+                        </button>
+                    )}
+                </div>
+
+                {/* Tab Navigation */}
+                <div className="flex space-x-2 border-b border-slate-700 pb-1">
                     <button
-                        onClick={openCreateModal}
-                        className="mt-4 sm:mt-0 px-5 py-2.5 bg-gradient-to-r from-emerald-500 to-teal-500 text-white rounded-xl font-medium hover:from-emerald-600 hover:to-teal-600 transition-all duration-200 shadow-lg shadow-emerald-500/25 flex items-center"
+                        onClick={() => setActiveTab('plans')}
+                        className={`px-4 py-2 rounded-t-lg font-medium transition-all ${activeTab === 'plans'
+                            ? 'bg-emerald-500/20 text-emerald-400 border-b-2 border-emerald-500'
+                            : 'text-slate-400 hover:text-slate-200'
+                            }`}
                     >
-                        <span className="mr-2">➕</span>
-                        Add Plan
+                        📦 Subscription Plans
+                    </button>
+                    <button
+                        onClick={() => setActiveTab('payments')}
+                        className={`px-4 py-2 rounded-t-lg font-medium transition-all ${activeTab === 'payments'
+                            ? 'bg-orange-500/20 text-orange-400 border-b-2 border-orange-500'
+                            : 'text-slate-400 hover:text-slate-200'
+                            }`}
+                    >
+                        💳 Pending Payments
+                        {pendingPayments.length > 0 && (
+                            <span className="ml-2 px-2 py-0.5 bg-orange-500 text-white text-xs rounded-full">
+                                {pendingPayments.length}
+                            </span>
+                        )}
                     </button>
                 </div>
 
@@ -171,82 +234,144 @@ const SubscriptionPlansAdmin = () => {
                     </div>
                 )}
 
-                {/* Plans Grid */}
-                {loading ? (
-                    <div className="flex items-center justify-center py-16">
-                        <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-emerald-500"></div>
-                    </div>
-                ) : plans.length === 0 ? (
-                    <div className="text-center py-16">
-                        <div className="text-5xl mb-3">📦</div>
-                        <h3 className="text-lg font-semibold text-slate-300 mb-1">No subscription plans</h3>
-                        <p className="text-slate-500 text-sm">Create your first subscription plan.</p>
-                    </div>
-                ) : (
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
-                        {plans.map((plan) => (
-                            <div
-                                key={plan._id}
-                                className={`bg-slate-800 rounded-xl border ${plan.isActive ? 'border-slate-600' : 'border-red-500/50'
-                                    } p-5 hover:border-emerald-500 transition-all duration-200 group shadow-lg`}
-                            >
-                                <div className="flex items-start justify-between mb-3">
-                                    <div>
-                                        <h3 className="text-lg font-semibold text-white group-hover:text-emerald-400 transition-colors">
-                                            {plan.name}
-                                        </h3>
-                                        <span className={`inline-block px-2 py-0.5 text-xs rounded-full mt-1 ${plan.planType === 'hours'
-                                            ? 'bg-blue-500/20 text-blue-400'
-                                            : 'bg-purple-500/20 text-purple-400'
-                                            }`}>
-                                            {plan.planType === 'hours' ? '⏱️ Hour-based' : '📋 Work-based'}
-                                        </span>
-                                        {!plan.isActive && (
-                                            <span className="inline-block px-2 py-0.5 bg-red-500/20 text-red-400 text-xs rounded-full ml-2">
-                                                Inactive
+                {/* Pending Payments Tab */}
+                {activeTab === 'payments' && (
+                    loading ? (
+                        <div className="flex items-center justify-center py-16">
+                            <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-orange-500"></div>
+                        </div>
+                    ) : pendingPayments.length === 0 ? (
+                        <div className="text-center py-16">
+                            <div className="text-5xl mb-3">✅</div>
+                            <h3 className="text-lg font-semibold text-slate-300 mb-1">No pending payments</h3>
+                            <p className="text-slate-500 text-sm">All subscription payments have been confirmed.</p>
+                        </div>
+                    ) : (
+                        <div className="space-y-4">
+                            {pendingPayments.map((sub) => (
+                                <div key={sub._id} className="bg-slate-800 rounded-xl border border-orange-500/30 p-5">
+                                    <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+                                        <div className="flex-1">
+                                            <div className="flex items-center gap-3 mb-2">
+                                                <span className="text-2xl">👤</span>
+                                                <div>
+                                                    <h4 className="text-lg font-semibold text-white">{sub.customer?.name || 'Unknown'}</h4>
+                                                    <p className="text-slate-400 text-sm">{sub.customer?.email}</p>
+                                                </div>
+                                            </div>
+                                            <div className="grid grid-cols-2 md:grid-cols-4 gap-3 text-sm mt-3">
+                                                <div>
+                                                    <span className="text-slate-500">Plan:</span>
+                                                    <span className="text-white ml-2 font-medium">{sub.plan?.name}</span>
+                                                </div>
+                                                <div>
+                                                    <span className="text-slate-500">Amount:</span>
+                                                    <span className="text-emerald-400 ml-2 font-bold">৳{sub.plan?.price}</span>
+                                                </div>
+                                                <div>
+                                                    <span className="text-slate-500">Type:</span>
+                                                    <span className="text-blue-400 ml-2">{sub.plan?.planType}</span>
+                                                </div>
+                                                <div>
+                                                    <span className="text-slate-500">Requested:</span>
+                                                    <span className="text-slate-300 ml-2">{new Date(sub.createdAt).toLocaleDateString()}</span>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div className="flex gap-2">
+                                            <button
+                                                onClick={() => handleConfirmPayment(sub._id)}
+                                                disabled={confirmingPayment === sub._id}
+                                                className="px-6 py-3 bg-gradient-to-r from-emerald-500 to-teal-500 text-white rounded-xl font-medium hover:from-emerald-600 hover:to-teal-600 transition-all disabled:opacity-50"
+                                            >
+                                                {confirmingPayment === sub._id ? '⏳ Confirming...' : '✅ Confirm Payment'}
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
+                    )
+                )}
+
+                {/* Plans Tab */}
+                {activeTab === 'plans' && (
+                    loading ? (
+                        <div className="flex items-center justify-center py-16">
+                            <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-emerald-500"></div>
+                        </div>
+                    ) : plans.length === 0 ? (
+                        <div className="text-center py-16">
+                            <div className="text-5xl mb-3">📦</div>
+                            <h3 className="text-lg font-semibold text-slate-300 mb-1">No subscription plans</h3>
+                            <p className="text-slate-500 text-sm">Create your first subscription plan.</p>
+                        </div>
+                    ) : (
+                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+                            {plans.map((plan) => (
+                                <div
+                                    key={plan._id}
+                                    className={`bg-slate-800 rounded-xl border ${plan.isActive ? 'border-slate-600' : 'border-red-500/50'
+                                        } p-5 hover:border-emerald-500 transition-all duration-200 group shadow-lg`}
+                                >
+                                    <div className="flex items-start justify-between mb-3">
+                                        <div>
+                                            <h3 className="text-lg font-semibold text-white group-hover:text-emerald-400 transition-colors">
+                                                {plan.name}
+                                            </h3>
+                                            <span className={`inline-block px-2 py-0.5 text-xs rounded-full mt-1 ${plan.planType === 'hours'
+                                                ? 'bg-blue-500/20 text-blue-400'
+                                                : 'bg-purple-500/20 text-purple-400'
+                                                }`}>
+                                                {plan.planType === 'hours' ? '⏱️ Hour-based' : '📋 Work-based'}
                                             </span>
-                                        )}
+                                            {!plan.isActive && (
+                                                <span className="inline-block px-2 py-0.5 bg-red-500/20 text-red-400 text-xs rounded-full ml-2">
+                                                    Inactive
+                                                </span>
+                                            )}
+                                        </div>
+                                        <div className="text-right">
+                                            <span className="text-xl font-bold text-emerald-400">৳{plan.price}</span>
+                                        </div>
                                     </div>
-                                    <div className="text-right">
-                                        <span className="text-xl font-bold text-emerald-400">৳{plan.price}</span>
+
+                                    <p className="text-slate-300 text-sm mb-3 line-clamp-2">
+                                        {plan.description || 'No description'}
+                                    </p>
+
+                                    <div className="space-y-1 mb-4 text-sm">
+                                        <div className="flex justify-between text-slate-200">
+                                            <span className="text-slate-400">{plan.planType === 'hours' ? 'Total Hours' : 'Total Works'}</span>
+                                            <span className="font-semibold text-white">{plan.totalUnits}</span>
+                                        </div>
+                                        <div className="flex justify-between text-slate-200">
+                                            <span className="text-slate-400">Validity</span>
+                                            <span className="font-semibold text-white">{plan.validityDays} days</span>
+                                        </div>
+                                    </div>
+
+                                    <div className="flex space-x-2 pt-3 border-t border-slate-700/50">
+                                        <button
+                                            onClick={() => openEditModal(plan)}
+                                            className="flex-1 px-3 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-all text-sm font-medium"
+                                        >
+                                            Edit
+                                        </button>
+                                        <button
+                                            onClick={() => handleToggleActive(plan)}
+                                            className={`flex-1 px-3 py-2 rounded-lg transition-all text-sm font-medium ${plan.isActive
+                                                ? 'bg-amber-600 text-white hover:bg-amber-700'
+                                                : 'bg-emerald-600 text-white hover:bg-emerald-700'
+                                                }`}
+                                        >
+                                            {plan.isActive ? 'Deactivate' : 'Activate'}
+                                        </button>
                                     </div>
                                 </div>
-
-                                <p className="text-slate-300 text-sm mb-3 line-clamp-2">
-                                    {plan.description || 'No description'}
-                                </p>
-
-                                <div className="space-y-1 mb-4 text-sm">
-                                    <div className="flex justify-between text-slate-200">
-                                        <span className="text-slate-400">{plan.planType === 'hours' ? 'Total Hours' : 'Total Works'}</span>
-                                        <span className="font-semibold text-white">{plan.totalUnits}</span>
-                                    </div>
-                                    <div className="flex justify-between text-slate-200">
-                                        <span className="text-slate-400">Validity</span>
-                                        <span className="font-semibold text-white">{plan.validityDays} days</span>
-                                    </div>
-                                </div>
-
-                                <div className="flex space-x-2 pt-3 border-t border-slate-700/50">
-                                    <button
-                                        onClick={() => openEditModal(plan)}
-                                        className="flex-1 px-3 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-all text-sm font-medium"
-                                    >
-                                        Edit
-                                    </button>
-                                    <button
-                                        onClick={() => handleToggleActive(plan)}
-                                        className={`flex-1 px-3 py-2 rounded-lg transition-all text-sm font-medium ${plan.isActive
-                                            ? 'bg-amber-600 text-white hover:bg-amber-700'
-                                            : 'bg-emerald-600 text-white hover:bg-emerald-700'
-                                            }`}
-                                    >
-                                        {plan.isActive ? 'Deactivate' : 'Activate'}
-                                    </button>
-                                </div>
-                            </div>
-                        ))}
-                    </div>
+                            ))}
+                        </div>
+                    )
                 )}
 
                 {/* Modal */}
