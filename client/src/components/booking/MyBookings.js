@@ -11,6 +11,7 @@ const MyBookings = () => {
     const [success, setSuccess] = useState('');
     const [reviewBookingId, setReviewBookingId] = useState(null);
     const [actionLoading, setActionLoading] = useState(null);
+    const [reviewedBookings, setReviewedBookings] = useState([]);
 
     useEffect(() => {
         const fetchBookings = async () => {
@@ -187,12 +188,18 @@ const MyBookings = () => {
                                 )}
                                 {booking.status === 'completed' && (
                                     <div className="mt-4 pt-4 border-t">
-                                        <button
-                                            onClick={() => setReviewBookingId(booking._id)}
-                                            className="w-full px-4 py-2 bg-yellow-100 text-yellow-700 rounded-lg hover:bg-yellow-200 text-sm font-medium"
-                                        >
-                                            ★ Rate & Review Service
-                                        </button>
+                                        {reviewedBookings.includes(booking._id) ? (
+                                            <div className="w-full px-4 py-2 bg-green-100 text-green-700 rounded-lg text-sm font-medium text-center">
+                                                ✓ Review Submitted
+                                            </div>
+                                        ) : (
+                                            <button
+                                                onClick={() => setReviewBookingId(booking._id)}
+                                                className="w-full px-4 py-2 bg-yellow-100 text-yellow-700 rounded-lg hover:bg-yellow-200 text-sm font-medium"
+                                            >
+                                                ★ Rate & Review Service
+                                            </button>
+                                        )}
                                     </div>
                                 )}
                             </div>
@@ -210,9 +217,11 @@ const MyBookings = () => {
                 <ReviewForm
                     bookingId={reviewBookingId}
                     onReviewSubmitted={() => {
+                        // Add to reviewed bookings so button shows "Review Submitted"
+                        setReviewedBookings(prev => [...prev, reviewBookingId]);
                         setReviewBookingId(null);
-                        // Optional: Refresh bookings or show success message
-                        alert('Thank you for your review!');
+                        setSuccess('Thank you for your review!');
+                        setTimeout(() => setSuccess(''), 4000);
                     }}
                     onClose={() => setReviewBookingId(null)}
                 />
