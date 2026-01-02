@@ -42,7 +42,7 @@ exports.registerUser = async (req, res, next) => {
       role: role || 'customer',
       verificationToken,
       verificationTokenExpire,
-      isVerified: config.NODE_ENV === 'development',
+      isVerified: false, // User must verify email before login
     });
 
     // Send verification email
@@ -171,10 +171,11 @@ exports.loginUser = async (req, res, next) => {
     }
 
     // Check if email is verified
-    if (!user.isVerified && config.NODE_ENV !== 'development') {
+    if (!user.isVerified) {
       return res.status(403).json({
         success: false,
-        message: 'Please verify your email before logging in',
+        message: 'Please verify your email before logging in. Check your inbox for the verification link.',
+        requiresVerification: true,
         userId: user._id,
       });
     }
@@ -286,7 +287,7 @@ exports.updateProfile = async (req, res, next) => {
     // Update fields
     if (name) user.name = name;
     if (phone) user.phone = phone;
-    
+
     if (address) {
       // Use toObject() to get plain object if user.address exists, or empty object
       const currentAddress = user.address ? user.address.toObject() : {};
@@ -300,10 +301,10 @@ exports.updateProfile = async (req, res, next) => {
       // Convert address to coordinates for distance calculation
       if (address) {
         console.log(`🗺️  Geocoding ${user.role} address...`);
-        
+
         const { geocodeAddress } = require('../utils/geocoding');
         const coordinates = await geocodeAddress(user.address);
-        
+
         if (coordinates) {
           // Save to BOTH locations for all users
           // 1. Save to address.coordinates (for distance calculations)
@@ -311,13 +312,13 @@ exports.updateProfile = async (req, res, next) => {
             latitude: coordinates.latitude,
             longitude: coordinates.longitude
           };
-          
+
           // 2. Also save to location (GeoJSON format for future geospatial queries)
           user.location = {
             type: 'Point',
             coordinates: [coordinates.longitude, coordinates.latitude]
           };
-          
+
           console.log(`✅ Coordinates saved for ${user.role}:`, coordinates);
         } else {
           console.log('⚠️  Geocoding failed, coordinates not updated');

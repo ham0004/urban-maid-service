@@ -23,7 +23,7 @@ const AdminDashboard = () => {
         name: '',
         description: '',
         icon: '🧹',
-        pricing: [{ name: '', price: '', duration: '', description: '' }],
+        basePrice: '',
     });
     const [formLoading, setFormLoading] = useState(false);
 
@@ -87,7 +87,7 @@ const AdminDashboard = () => {
             name: '',
             description: '',
             icon: '🧹',
-            pricing: [{ name: '', price: '', duration: '', description: '' }],
+            basePrice: '',
         });
         setShowModal(true);
         setError('');
@@ -100,14 +100,7 @@ const AdminDashboard = () => {
             name: category.name,
             description: category.description || '',
             icon: category.icon || '🧹',
-            pricing: category.pricing.length > 0
-                ? category.pricing.map(p => ({
-                    name: p.name,
-                    price: p.price.toString(),
-                    duration: p.duration.toString(),
-                    description: p.description || '',
-                }))
-                : [{ name: '', price: '', duration: '', description: '' }],
+            basePrice: category.basePrice?.toString() || '',
         });
         setShowModal(true);
         setError('');
@@ -126,26 +119,6 @@ const AdminDashboard = () => {
         });
     };
 
-    const handlePricingChange = (index, field, value) => {
-        const newPricing = [...formData.pricing];
-        newPricing[index][field] = value;
-        setFormData({ ...formData, pricing: newPricing });
-    };
-
-    const addPricingTier = () => {
-        setFormData({
-            ...formData,
-            pricing: [...formData.pricing, { name: '', price: '', duration: '', description: '' }],
-        });
-    };
-
-    const removePricingTier = (index) => {
-        if (formData.pricing.length > 1) {
-            const newPricing = formData.pricing.filter((_, i) => i !== index);
-            setFormData({ ...formData, pricing: newPricing });
-        }
-    };
-
     const handleSubmit = async (e) => {
         e.preventDefault();
         setError('');
@@ -157,9 +130,8 @@ const AdminDashboard = () => {
             return;
         }
 
-        const validPricing = formData.pricing.filter(p => p.name && p.price && p.duration);
-        if (validPricing.length === 0) {
-            setError('At least one complete pricing tier is required');
+        if (!formData.basePrice || parseFloat(formData.basePrice) <= 0) {
+            setError('Please provide a valid hourly rate');
             setFormLoading(false);
             return;
         }
@@ -168,12 +140,7 @@ const AdminDashboard = () => {
             name: formData.name.trim(),
             description: formData.description.trim(),
             icon: formData.icon,
-            pricing: validPricing.map(p => ({
-                name: p.name,
-                price: parseFloat(p.price),
-                duration: parseInt(p.duration, 10),
-                description: p.description,
-            })),
+            basePrice: parseFloat(formData.basePrice),
         };
 
         try {
@@ -363,16 +330,11 @@ const AdminDashboard = () => {
                                 </p>
 
                                 <div className="space-y-2 mb-4">
-                                    <h4 className="text-xs font-semibold text-slate-500 uppercase tracking-wider">Pricing</h4>
-                                    {category.pricing.slice(0, 3).map((tier, index) => (
-                                        <div key={index} className="flex justify-between items-center text-sm">
-                                            <span className="text-slate-300">{tier.name}</span>
-                                            <span className="text-emerald-400 font-medium">৳{tier.price}</span>
-                                        </div>
-                                    ))}
-                                    {category.pricing.length > 3 && (
-                                        <p className="text-slate-500 text-xs">+{category.pricing.length - 3} more tiers</p>
-                                    )}
+                                    <h4 className="text-xs font-semibold text-slate-500 uppercase tracking-wider">Hourly Rate</h4>
+                                    <div className="flex justify-between items-center text-sm">
+                                        <span className="text-slate-300">Per Hour</span>
+                                        <span className="text-emerald-400 font-medium text-lg">৳{category.basePrice || 0}</span>
+                                    </div>
                                 </div>
 
                                 <div className="flex space-x-2 pt-4 border-t border-slate-700/50">
@@ -477,65 +439,19 @@ const AdminDashboard = () => {
                                 </div>
 
                                 <div className="mb-6">
-                                    <div className="flex items-center justify-between mb-3">
-                                        <label className="block text-sm font-medium text-slate-300">
-                                            Pricing Tiers * (Name, Price in ৳, Duration in minutes)
-                                        </label>
-                                        <button
-                                            type="button"
-                                            onClick={addPricingTier}
-                                            className="text-sm text-indigo-400 hover:text-indigo-300 flex items-center"
-                                        >
-                                            ➕ Add Tier
-                                        </button>
-                                    </div>
-                                    <div className="space-y-4">
-                                        {formData.pricing.map((tier, index) => (
-                                            <div key={index} className="bg-slate-900/50 rounded-xl p-4 border border-slate-600/50">
-                                                <div className="flex items-center justify-between mb-3">
-                                                    <span className="text-sm text-slate-400">Tier {index + 1}</span>
-                                                    {formData.pricing.length > 1 && (
-                                                        <button
-                                                            type="button"
-                                                            onClick={() => removePricingTier(index)}
-                                                            className="text-red-400 hover:text-red-300 text-sm"
-                                                        >
-                                                            🗑️ Remove
-                                                        </button>
-                                                    )}
-                                                </div>
-                                                <div className="grid grid-cols-3 gap-3">
-                                                    <div>
-                                                        <input
-                                                            type="text"
-                                                            placeholder="Name (e.g., Hourly)"
-                                                            value={tier.name}
-                                                            onChange={(e) => handlePricingChange(index, 'name', e.target.value)}
-                                                            className="w-full px-3 py-2 bg-slate-800 border border-slate-600/50 rounded-lg text-slate-200 text-sm placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/50"
-                                                        />
-                                                    </div>
-                                                    <div>
-                                                        <input
-                                                            type="number"
-                                                            placeholder="Price (৳)"
-                                                            value={tier.price}
-                                                            onChange={(e) => handlePricingChange(index, 'price', e.target.value)}
-                                                            className="w-full px-3 py-2 bg-slate-800 border border-slate-600/50 rounded-lg text-slate-200 text-sm placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/50"
-                                                        />
-                                                    </div>
-                                                    <div>
-                                                        <input
-                                                            type="number"
-                                                            placeholder="Duration (min)"
-                                                            value={tier.duration}
-                                                            onChange={(e) => handlePricingChange(index, 'duration', e.target.value)}
-                                                            className="w-full px-3 py-2 bg-slate-800 border border-slate-600/50 rounded-lg text-slate-200 text-sm placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/50"
-                                                        />
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        ))}
-                                    </div>
+                                    <label className="block text-sm font-medium text-slate-300 mb-2">
+                                        Hourly Rate (৳) *
+                                    </label>
+                                    <input
+                                        type="number"
+                                        name="basePrice"
+                                        value={formData.basePrice}
+                                        onChange={handleInputChange}
+                                        placeholder="e.g., 300"
+                                        min="1"
+                                        className="w-full px-4 py-3 bg-slate-900/50 border border-slate-600/50 rounded-xl text-slate-200 placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/50 focus:border-indigo-500/50"
+                                    />
+                                    <p className="text-slate-500 text-xs mt-2">Price charged per hour for this service</p>
                                 </div>
 
                                 <div className="flex space-x-3">
@@ -548,8 +464,8 @@ const AdminDashboard = () => {
                                     </button>
                                     {(() => {
                                         const hasValidName = formData.name.trim().length > 0;
-                                        const hasValidPricing = formData.pricing.some(p => p.name.trim() && p.price && p.duration);
-                                        const isFormValid = hasValidName && hasValidPricing;
+                                        const hasValidPrice = formData.basePrice && parseFloat(formData.basePrice) > 0;
+                                        const isFormValid = hasValidName && hasValidPrice;
                                         return (
                                             <button
                                                 type="submit"

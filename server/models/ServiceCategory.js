@@ -24,29 +24,12 @@ const serviceCategorySchema = new mongoose.Schema(
             trim: true,
             default: '🧹',
         },
-        pricing: [
-            {
-                name: {
-                    type: String,
-                    required: [true, 'Pricing tier name is required'],
-                    trim: true,
-                },
-                price: {
-                    type: Number,
-                    required: [true, 'Price is required'],
-                    min: [0, 'Price cannot be negative'],
-                },
-                duration: {
-                    type: Number,
-                    required: [true, 'Duration is required'],
-                    min: [1, 'Duration must be at least 1 minute'],
-                },
-                description: {
-                    type: String,
-                    trim: true,
-                },
-            },
-        ],
+        // Simple hourly rate (replaces complex tier system)
+        basePrice: {
+            type: Number,
+            default: 0,
+            min: [0, 'Price cannot be negative'],
+        },
         isActive: {
             type: Boolean,
             default: true,

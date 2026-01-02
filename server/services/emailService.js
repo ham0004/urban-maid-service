@@ -52,7 +52,7 @@ const sendVerificationEmail = async (email, name, verificationToken, userId) => 
             <p>Thank you for registering with Urban Maid Service. We're excited to have you on board!</p>
             <p>To complete your registration and activate your account, please verify your email address by clicking the button below:</p>
             <div style="text-align: center;">
-              <a href="${verificationUrl}" class="button">Verify Email Address</a>
+              <a href="${verificationUrl}" style="display: inline-block; padding: 14px 35px; background-color: #4F46E5; color: #ffffff !important; text-decoration: none; border-radius: 8px; margin: 20px 0; font-weight: bold; font-size: 16px;">Verify Email Address</a>
             </div>
             <p>Or copy and paste this link in your browser:</p>
             <p style="word-break: break-all; color: #4F46E5;">${verificationUrl}</p>
@@ -141,7 +141,7 @@ const sendPasswordResetEmail = async (email, name, resetToken) => {
             <p>We received a request to reset your password for your Urban Maid Service account.</p>
             <p>Click the button below to reset your password:</p>
             <div style="text-align: center;">
-              <a href="${resetUrl}" class="button">Reset Password</a>
+              <a href="${resetUrl}" style="display: inline-block; padding: 14px 35px; background-color: #EF4444; color: #ffffff !important; text-decoration: none; border-radius: 8px; margin: 20px 0; font-weight: bold; font-size: 16px;">Reset Password</a>
             </div>
             <p>Or copy and paste this link in your browser:</p>
             <p style="word-break: break-all; color: #EF4444;">${resetUrl}</p>

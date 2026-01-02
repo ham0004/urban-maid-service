@@ -57,9 +57,9 @@ exports.createBooking = async (req, res, next) => {
             });
         }
 
-        // Calculate price from service category pricing
-        const pricing = serviceCategory.pricing.find(p => p.duration === duration);
-        const totalPrice = pricing ? pricing.price : serviceCategory.pricing[0]?.price || 0;
+        // Calculate price based on hourly rate (basePrice)
+        const hoursBooked = duration / 60;
+        const totalPrice = Math.round(serviceCategory.basePrice * hoursBooked);
 
         // ========================================
         // MEMBER-1: Check for active subscription
