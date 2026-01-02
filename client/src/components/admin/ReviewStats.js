@@ -13,7 +13,7 @@ const ReviewStats = () => {
         const fetchStats = async () => {
             try {
                 const response = await axios.get(
-                    `${process.env.REACT_APP_API_URL || 'http://localhost:5000'}/analytics/stats`,
+                    `${process.env.REACT_APP_API_URL || 'http://localhost:5000'}/api/analytics/stats`,
                     {
                         headers: { Authorization: `Bearer ${token}` },
                     }

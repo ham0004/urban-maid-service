@@ -35,6 +35,7 @@ const MaidSearch = () => {
         if (navigator.geolocation) {
             navigator.geolocation.getCurrentPosition(
                 (position) => {
+                    console.log('📍 Got customer location:', position.coords.latitude, position.coords.longitude);
                     setLocation({
                         lat: position.coords.latitude,
                         lng: position.coords.longitude
@@ -42,6 +43,13 @@ const MaidSearch = () => {
                 },
                 (err) => {
                     console.error("Error getting location:", err);
+                    // Still allow search without location after error
+                    setLocation(null);
+                },
+                {
+                    enableHighAccuracy: true,
+                    timeout: 10000,
+                    maximumAge: 0
                 }
             );
         }
@@ -203,6 +211,7 @@ const MaidSearch = () => {
                                     >
                                         <option value="rating">Rating (High to Low)</option>
                                         <option value="experience">Experience (Most First)</option>
+                                        {location && <option value="distance">Nearest Distance</option>}
                                     </select>
                                 </div>
 
