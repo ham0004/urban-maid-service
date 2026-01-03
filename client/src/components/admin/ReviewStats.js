@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import axios from 'axios';
+import api from '../../utils/api';
 import { PieChart, Pie, Cell, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 
 const ReviewStats = () => {
@@ -12,12 +12,7 @@ const ReviewStats = () => {
     useEffect(() => {
         const fetchStats = async () => {
             try {
-                const response = await axios.get(
-                    `${process.env.REACT_APP_API_URL || 'http://localhost:5000'}/api/analytics/stats`,
-                    {
-                        headers: { Authorization: `Bearer ${token}` },
-                    }
-                );
+                const response = await api.get('/analytics/stats');
                 setStats(response.data);
                 setLoading(false);
             } catch (err) {

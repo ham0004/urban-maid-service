@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import axios from 'axios';
+import api from '../../utils/api';
 import ReviewStats from './ReviewStats';
 import AnalyticsReport from './AnalyticsReport';
 
@@ -27,13 +27,7 @@ const AnalyticsDashboard = () => {
         setError('');
 
         try {
-            const response = await axios.post(
-                `${process.env.REACT_APP_API_URL || 'http://localhost:5000'}/api/analytics/generate-report`,
-                {},
-                {
-                    headers: { Authorization: `Bearer ${token}` },
-                }
-            );
+            const response = await api.post('/analytics/generate-report', {});
 
             setReport(response.data);
             setGenerating(false);

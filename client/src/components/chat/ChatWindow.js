@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import axios from 'axios';
+import api from '../../utils/api';
 import { useChat } from './ChatProvider';
 import ChatBubble from './ChatBubble';
 
@@ -35,12 +35,7 @@ const ChatWindow = () => {
     useEffect(() => {
         const fetchChat = async () => {
             try {
-                const response = await axios.get(
-                    `${process.env.REACT_APP_API_URL || 'http://localhost:5000'}/api/chat/booking/${bookingId}`,
-                    {
-                        headers: { Authorization: `Bearer ${token}` },
-                    }
-                );
+                const response = await api.get(`/chat/booking/${bookingId}`);
 
                 setChatInfo(response.data);
                 setMessages(response.data.messages || []);
