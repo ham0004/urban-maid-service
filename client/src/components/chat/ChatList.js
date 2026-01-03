@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import axios from 'axios';
+import api from '../../utils/api';
 import { useChat } from './ChatProvider';
 
 const ChatList = () => {
@@ -18,12 +18,7 @@ const ChatList = () => {
     useEffect(() => {
         const fetchChats = async () => {
             try {
-                const response = await axios.get(
-                    `${process.env.REACT_APP_API_URL || 'http://localhost:5000'}/api/chat/user/chats`,
-                    {
-                        headers: { Authorization: `Bearer ${token}` },
-                    }
-                );
+                const response = await api.get('/chat/user/chats');
 
                 setChats(response.data);
 
@@ -60,12 +55,7 @@ const ChatList = () => {
                 // Refetch chats when new message arrives
                 const fetchChats = async () => {
                     try {
-                        const response = await axios.get(
-                            `${process.env.REACT_APP_API_URL || 'http://localhost:5000'}/api/chat/user/chats`,
-                            {
-                                headers: { Authorization: `Bearer ${token}` },
-                            }
-                        );
+                        const response = await api.get('/chat/user/chats');
                         setChats(response.data);
                     } catch (err) {
                         console.error('Error refetching chats:', err);
